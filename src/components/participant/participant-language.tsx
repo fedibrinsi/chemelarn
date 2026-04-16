@@ -253,10 +253,10 @@ export function ParticipantLanguageProvider({ children }: { children: React.Reac
     window.localStorage.setItem("participant-locale", locale);
   }, [locale]);
 
-  const value = useMemo(
+  const value = useMemo<ParticipantLanguageContextValue>(
     () => ({
       locale,
-      setLocale,
+      setLocale: (nextLocale) => setLocale(nextLocale),
       dictionary: translations[locale],
       dir: locale === "ar" ? "rtl" : "ltr",
     }),
