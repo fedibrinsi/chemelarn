@@ -6,6 +6,7 @@ type QuestionSnapshot = {
   type: QuestionType;
   prompt: string;
   explanation?: string | null;
+  placeholder?: string | null;
   points: number;
   isCaseSensitive: boolean;
   answerKey?: unknown;
@@ -57,6 +58,7 @@ export function buildExamSnapshot(exam: {
       type: QuestionType;
       prompt: string;
       explanation: string | null;
+      placeholder: string | null;
       points: number;
       isCaseSensitive: boolean;
       answerKey: Prisma.JsonValue | null;
@@ -80,6 +82,7 @@ export function buildExamSnapshot(exam: {
         type: question.type,
         prompt: question.prompt,
         explanation: question.explanation,
+        placeholder: question.placeholder,
         points: question.points,
         isCaseSensitive: question.isCaseSensitive,
         answerKey: question.answerKey ?? undefined,
