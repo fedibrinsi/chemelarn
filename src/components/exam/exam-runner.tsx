@@ -40,6 +40,11 @@ export function ExamRunner({ sessionId, snapshot, initialAnswers, expiresAt, sta
       return;
     }
 
+    const payload = (await response.json()) as { status?: "submitted" | "expired" | "already-finalized" };
+    if (payload.status === "expired") {
+      toast.info("Time is finished. The exam is now closed and your saved answers were sent.");
+    }
+
     router.push(`/participant/results/${sessionId}`);
   }, [answers, router, sessionId, submitting]);
 
@@ -60,15 +65,28 @@ export function ExamRunner({ sessionId, snapshot, initialAnswers, expiresAt, sta
 
   useEffect(() => {
     const timeout = window.setTimeout(async () => {
-      await fetch(`/api/sessions/${sessionId}/autosave`, {
+      const response = await fetch(`/api/sessions/${sessionId}/autosave`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ answers, start: status === "NOT_STARTED" }),
       });
+
+      if (!response.ok) {
+        if (response.status === 409) {
+          router.push(`/participant/results/${sessionId}`);
+        }
+        return;
+      }
+
+      const payload = (await response.json()) as { expired?: boolean; redirectTo?: string };
+      if (payload.expired) {
+        toast.info("Time is finished. The exam is now closed.");
+        router.push(payload.redirectTo ?? `/participant/results/${sessionId}`);
+      }
     }, 1200);
 
     return () => window.clearTimeout(timeout);
-  }, [answers, sessionId, status]);
+  }, [answers, router, sessionId, status]);
 
   return (
     <div className="space-y-6">
@@ -113,7 +131,7 @@ export function ExamRunner({ sessionId, snapshot, initialAnswers, expiresAt, sta
         </Card>
       ))}
 
-      <Button type="button" onClick={() => void submitNow(false)} disabled={submitting}>
+      <Button type="button" onClick={() => void submitNow(false)} disabled={submitting || timeLeft <= 0}>
         {submitting ? dictionary.submitting : dictionary.submitExam}
       </Button>
     </div>

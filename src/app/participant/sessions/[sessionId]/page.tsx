@@ -3,6 +3,7 @@ import { Role, SessionStatus } from "@prisma/client";
 import { requireRole } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { ExamRunner } from "@/components/exam/exam-runner";
+import { submitSessionAction } from "@/lib/actions/participant";
 
 export default async function SessionPage({ params }: { params: Promise<{ sessionId: string }> }) {
   const { sessionId } = await params;
@@ -13,6 +14,14 @@ export default async function SessionPage({ params }: { params: Promise<{ sessio
 
   if (!examSession) notFound();
   if (examSession.status === SessionStatus.SUBMITTED || examSession.status === SessionStatus.EXPIRED) {
+    redirect(`/participant/results/${examSession.id}`);
+  }
+  if (examSession.expiresAt && examSession.expiresAt <= new Date()) {
+    await submitSessionAction(
+      examSession.id,
+      ((examSession.draftAnswers as Record<string, unknown> | null) ?? {}) as Record<string, unknown>,
+      true,
+    );
     redirect(`/participant/results/${examSession.id}`);
   }
 

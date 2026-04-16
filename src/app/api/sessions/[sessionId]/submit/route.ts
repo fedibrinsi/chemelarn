@@ -16,6 +16,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ ses
     autoSubmitted?: boolean;
   };
 
-  await submitSessionAction(sessionId, body.answers, body.autoSubmitted);
-  return NextResponse.json({ success: true });
+  const result = await submitSessionAction(sessionId, body.answers, body.autoSubmitted);
+  return NextResponse.json({ success: true, ...result });
 }

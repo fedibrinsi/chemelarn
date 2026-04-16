@@ -3,6 +3,7 @@ import { Prisma, Role, SessionStatus } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth/auth-options";
 import { db } from "@/lib/db";
+import { submitSessionAction } from "@/lib/actions/participant";
 
 const autosaveLimit = new Map<string, { count: number; resetAt: number }>();
 
@@ -37,6 +38,23 @@ export async function PUT(request: Request, { params }: { params: Promise<{ sess
   });
 
   if (!examSession) return NextResponse.json({ message: "Not found" }, { status: 404 });
+  if (
+    examSession.status === SessionStatus.SUBMITTED ||
+    examSession.status === SessionStatus.EXPIRED
+  ) {
+    return NextResponse.json(
+      { message: "Session already closed", expired: true, redirectTo: `/participant/results/${sessionId}` },
+      { status: 409 },
+    );
+  }
+  if (examSession.expiresAt && examSession.expiresAt <= new Date()) {
+    await submitSessionAction(sessionId, body.answers, true);
+    return NextResponse.json({
+      success: true,
+      expired: true,
+      redirectTo: `/participant/results/${sessionId}`,
+    });
+  }
 
   await db.examSession.update({
     where: { id: sessionId },

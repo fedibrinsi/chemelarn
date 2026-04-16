@@ -9,6 +9,9 @@ import { minutesFromNow } from "@/lib/utils";
 import { redeemCodeSchema } from "@/lib/validations";
 
 type ActionState = { success: boolean; message: string; redirectTo?: string };
+export type SubmitSessionResult = {
+  status: "submitted" | "expired" | "already-finalized";
+};
 
 function toJson(value: unknown): Prisma.InputJsonValue {
   return JSON.parse(JSON.stringify(value));
@@ -90,7 +93,11 @@ export async function redeemExamCodeAction(_: ActionState, formData: FormData): 
   };
 }
 
-export async function submitSessionAction(sessionId: string, answers: DraftAnswers, autoSubmitted = false) {
+export async function submitSessionAction(
+  sessionId: string,
+  answers: DraftAnswers,
+  autoSubmitted = false,
+): Promise<SubmitSessionResult> {
   const session = await requireRole(Role.PARTICIPANT);
   const participantId = session.user.participantProfileId;
 
@@ -101,18 +108,31 @@ export async function submitSessionAction(sessionId: string, answers: DraftAnswe
   });
 
   if (!examSession) throw new Error("Exam session not found");
+  if (
+    examSession.status === SessionStatus.SUBMITTED ||
+    examSession.status === SessionStatus.EXPIRED
+  ) {
+    return { status: "already-finalized" };
+  }
+
+  const hasExpired = Boolean(examSession.expiresAt && examSession.expiresAt <= new Date());
+  const shouldExpireSession = autoSubmitted || hasExpired;
+  const finalAnswers =
+    shouldExpireSession && !autoSubmitted
+      ? (((examSession.draftAnswers as DraftAnswers | null) ?? {}) as DraftAnswers)
+      : answers;
 
   const snapshot = examSession.examSnapshot as unknown as Parameters<typeof gradeSubmission>[0];
-  const grading = gradeSubmission(snapshot, answers);
+  const grading = gradeSubmission(snapshot, finalAnswers);
 
   await db.$transaction(async (tx) => {
     await tx.examSession.update({
       where: { id: sessionId },
       data: {
-        status: autoSubmitted ? SessionStatus.EXPIRED : SessionStatus.SUBMITTED,
+        status: shouldExpireSession ? SessionStatus.EXPIRED : SessionStatus.SUBMITTED,
         submittedAt: new Date(),
-        autoSubmittedAt: autoSubmitted ? new Date() : undefined,
-        draftAnswers: toJson(answers),
+        autoSubmittedAt: shouldExpireSession ? new Date() : undefined,
+        draftAnswers: toJson(finalAnswers),
       },
     });
 
@@ -129,7 +149,7 @@ export async function submitSessionAction(sessionId: string, answers: DraftAnswe
         gradedAt: grading.status === "GRADED" ? new Date() : undefined,
         submittedAt: new Date(),
         correctionsVisible: snapshot.allowResultReview,
-        answersSnapshot: toJson(answers),
+        answersSnapshot: toJson(finalAnswers),
         sectionBreakdown: toJson(grading.sectionBreakdown),
       },
       update: {
@@ -140,7 +160,7 @@ export async function submitSessionAction(sessionId: string, answers: DraftAnswe
         autoGradedAt: new Date(),
         gradedAt: grading.status === "GRADED" ? new Date() : undefined,
         submittedAt: new Date(),
-        answersSnapshot: toJson(answers),
+        answersSnapshot: toJson(finalAnswers),
         sectionBreakdown: toJson(grading.sectionBreakdown),
       },
     });
@@ -163,4 +183,7 @@ export async function submitSessionAction(sessionId: string, answers: DraftAnswe
 
   revalidatePath("/participant");
   revalidatePath(`/participant/results/${sessionId}`);
+  revalidatePath("/admin/participants");
+
+  return { status: shouldExpireSession ? "expired" : "submitted" };
 }
