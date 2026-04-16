@@ -48,6 +48,20 @@ const builderPairSchema = z.object({
   correctMatch: z.string().min(1),
 });
 
+const builderLabComponentSchema = z.object({
+  label: z.string().min(1),
+  value: z.string().min(1),
+  color: z.string().min(1),
+  effect: z.string().min(1),
+});
+
+const builderLabConfigSchema = z.object({
+  experimentTitle: z.string().min(1),
+  vesselLabel: z.string().min(1),
+  resultLabel: z.string().min(1),
+  components: z.array(builderLabComponentSchema).min(2),
+});
+
 const questionBuilderSchema = z.object({
   prompt: z.string().min(5),
   explanation: z.string().optional(),
@@ -59,12 +73,14 @@ const questionBuilderSchema = z.object({
     "SHORT_ANSWER",
     "MATCHING",
     "ORDERING",
+    "LAB_SIMULATION",
   ]),
   points: z.number().min(0.5).max(100),
   isCaseSensitive: z.boolean().optional(),
   answerKey: z.any().optional(),
   options: z.array(builderChoiceSchema).optional(),
   pairs: z.array(builderPairSchema).optional(),
+  config: builderLabConfigSchema.optional(),
 });
 
 export const examBuilderSchema = z.object({

@@ -12,6 +12,12 @@ type QuestionSnapshot = {
   answerKey?: unknown;
   options?: Array<{ id?: string; label: string; value: string; isCorrect?: boolean }>;
   matchingPairs?: Array<{ leftLabel: string; rightLabel: string; correctMatch: string }>;
+  config?: {
+    experimentTitle?: string;
+    vesselLabel?: string;
+    resultLabel?: string;
+    components?: Array<{ label: string; value: string; color: string; effect: string }>;
+  } | null;
 };
 
 type SectionSnapshot = {
@@ -61,6 +67,7 @@ export function buildExamSnapshot(exam: {
       placeholder: string | null;
       points: number;
       isCaseSensitive: boolean;
+      config: Prisma.JsonValue | null;
       answerKey: Prisma.JsonValue | null;
       choiceOptions: Array<{ id: string; label: string; value: string; isCorrect: boolean }>;
       matchingPairs: Array<{ leftLabel: string; rightLabel: string; correctMatch: string }>;
@@ -85,6 +92,7 @@ export function buildExamSnapshot(exam: {
         placeholder: question.placeholder,
         points: question.points,
         isCaseSensitive: question.isCaseSensitive,
+        config: (question.config as QuestionSnapshot["config"]) ?? undefined,
         answerKey: question.answerKey ?? undefined,
         options: question.choiceOptions,
         matchingPairs: question.matchingPairs,
@@ -181,6 +189,14 @@ export function gradeSubmission(snapshot: ExamSnapshot, draftAnswers: DraftAnswe
           isCorrect = null;
           autoScore = 0;
           feedback = "Awaiting teacher review.";
+          break;
+        }
+        case "LAB_SIMULATION": {
+          const expected = Array.isArray(question.answerKey) ? question.answerKey.map(String) : [];
+          const actual = Array.isArray(response) ? response.map(String) : [];
+          isCorrect = arrayEquals(actual, expected);
+          autoScore = isCorrect ? maxScore : 0;
+          feedback = isCorrect ? "Lab mixture is correct." : "The selected mixing sequence is not correct yet.";
           break;
         }
         default:

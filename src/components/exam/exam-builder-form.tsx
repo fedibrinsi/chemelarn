@@ -10,7 +10,7 @@ import { saveExamAction } from "@/lib/actions/admin";
 import { questionTypeOptions } from "@/lib/constants";
 import { toast } from "sonner";
 
-type BuilderQuestion = {
+export type BuilderQuestion = {
   prompt: string;
   explanation?: string;
   placeholder?: string;
@@ -20,9 +20,15 @@ type BuilderQuestion = {
   answerKey?: unknown;
   options?: Array<{ label: string; value: string; isCorrect?: boolean }>;
   pairs?: Array<{ leftLabel: string; rightLabel: string; correctMatch: string }>;
+  config?: {
+    experimentTitle: string;
+    vesselLabel: string;
+    resultLabel: string;
+    components: Array<{ label: string; value: string; color: string; effect: string }>;
+  };
 };
 
-type BuilderState = {
+export type BuilderState = {
   title: string;
   description?: string;
   durationMinutes: number;
@@ -47,6 +53,19 @@ const starterQuestion: BuilderQuestion = {
   points: 2,
   placeholder: "Write a short explanation",
 };
+
+function createDefaultLabConfig() {
+  return {
+    experimentTitle: "Reaction bench",
+    vesselLabel: "Mixing flask",
+    resultLabel: "Expected result: blue precipitate",
+    components: [
+      { label: "Copper sulfate", value: "copper-sulfate", color: "#2563eb", effect: "Turns the solution blue." },
+      { label: "Sodium hydroxide", value: "sodium-hydroxide", color: "#10b981", effect: "Forms a precipitate with copper ions." },
+      { label: "Distilled water", value: "distilled-water", color: "#cbd5f5", effect: "Dilutes the mixture." },
+    ],
+  };
+}
 
 export function ExamBuilderForm({
   examId,
@@ -189,9 +208,11 @@ export function ExamBuilderForm({
                   <select
                     value={question.type}
                     onChange={(event) =>
-                      updateQuestion(sectionIndex, questionIndex, {
-                        type: event.target.value as BuilderQuestion["type"],
-                      })
+                      updateQuestion(
+                        sectionIndex,
+                        questionIndex,
+                        normalizeQuestionForType(question, event.target.value as BuilderQuestion["type"]),
+                      )
                     }
                     className="w-full rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-sm outline-none"
                   >
@@ -400,6 +421,168 @@ function QuestionSettingsEditor({
     );
   }
 
+  if (question.type === "LAB_SIMULATION") {
+    const config = question.config ?? createDefaultLabConfig();
+
+    return (
+      <div className="mt-4 space-y-4">
+        <div>
+          <p className="text-sm font-medium">Interactive lab setup</p>
+          <p className="text-xs text-slate-500">
+            Participants will see a beaker-style visual and reagent buttons, then build the correct mixture step by step.
+          </p>
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-3">
+          <Input
+            value={config.experimentTitle}
+            placeholder="Experiment title"
+            onChange={(event) =>
+              onChange({
+                config: { ...config, experimentTitle: event.target.value },
+              })
+            }
+          />
+          <Input
+            value={config.vesselLabel}
+            placeholder="Vessel label"
+            onChange={(event) =>
+              onChange({
+                config: { ...config, vesselLabel: event.target.value },
+              })
+            }
+          />
+          <Input
+            value={config.resultLabel}
+            placeholder="Expected result"
+            onChange={(event) =>
+              onChange({
+                config: { ...config, resultLabel: event.target.value },
+              })
+            }
+          />
+        </div>
+
+        <div className="space-y-3">
+          <p className="text-sm font-medium">Reagent buttons</p>
+          {config.components.map((component, componentIndex) => (
+            <div key={`${component.value}-${componentIndex}`} className="grid gap-3 md:grid-cols-[1.1fr_1fr_120px_1.4fr_auto]">
+              <Input
+                value={component.label}
+                placeholder="Button label"
+                onChange={(event) =>
+                  onChange({
+                    config: {
+                      ...config,
+                      components: config.components.map((item, index) =>
+                        index === componentIndex ? { ...item, label: event.target.value } : item,
+                      ),
+                    },
+                  })
+                }
+              />
+              <Input
+                value={component.value}
+                placeholder="Stored value"
+                onChange={(event) =>
+                  onChange({
+                    config: {
+                      ...config,
+                      components: config.components.map((item, index) =>
+                        index === componentIndex ? { ...item, value: event.target.value } : item,
+                      ),
+                    },
+                  })
+                }
+              />
+              <Input
+                type="color"
+                value={component.color}
+                onChange={(event) =>
+                  onChange({
+                    config: {
+                      ...config,
+                      components: config.components.map((item, index) =>
+                        index === componentIndex ? { ...item, color: event.target.value } : item,
+                      ),
+                    },
+                  })
+                }
+              />
+              <Input
+                value={component.effect}
+                placeholder="What this reagent does"
+                onChange={(event) =>
+                  onChange({
+                    config: {
+                      ...config,
+                      components: config.components.map((item, index) =>
+                        index === componentIndex ? { ...item, effect: event.target.value } : item,
+                      ),
+                    },
+                  })
+                }
+              />
+              <Button
+                variant="ghost"
+                onClick={() =>
+                  onChange({
+                    config: {
+                      ...config,
+                      components: config.components.filter((_, index) => index !== componentIndex),
+                    },
+                  })
+                }
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
+          <Button
+            variant="secondary"
+            onClick={() =>
+              onChange({
+                config: {
+                  ...config,
+                  components: [
+                    ...config.components,
+                    {
+                      label: "New reagent",
+                      value: `reagent-${config.components.length + 1}`,
+                      color: "#f59e0b",
+                      effect: "Describe the visible effect.",
+                    },
+                  ],
+                },
+              })
+            }
+          >
+            Add reagent
+          </Button>
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-sm font-medium">Correct mixing sequence</p>
+          <p className="text-xs text-slate-500">
+            Enter the reagent values in order, separated by commas. Example: `copper-sulfate, sodium-hydroxide`
+          </p>
+          <Input
+            value={Array.isArray(question.answerKey) ? question.answerKey.join(", ") : ""}
+            placeholder="reagent-1, reagent-2"
+            onChange={(event) =>
+              onChange({
+                answerKey: event.target.value
+                  .split(",")
+                  .map((item) => item.trim())
+                  .filter(Boolean),
+              })
+            }
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mt-4 space-y-3">
       <p className="text-sm font-medium">Answer choices</p>
@@ -561,5 +744,35 @@ function deriveAnswerKey(question: BuilderQuestion) {
           .filter(Boolean);
   }
 
+  if (question.type === "LAB_SIMULATION") {
+    return Array.isArray(question.answerKey)
+      ? question.answerKey
+      : String(question.answerKey ?? "")
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean);
+  }
+
   return question.answerKey;
+}
+
+function normalizeQuestionForType(
+  question: BuilderQuestion,
+  type: BuilderQuestion["type"],
+): Partial<BuilderQuestion> {
+  if (type === "LAB_SIMULATION") {
+    return {
+      type,
+      options: [],
+      pairs: [],
+      placeholder: "",
+      config: question.config ?? createDefaultLabConfig(),
+      answerKey: Array.isArray(question.answerKey) ? question.answerKey : [],
+    };
+  }
+
+  return {
+    type,
+    config: undefined,
+  };
 }

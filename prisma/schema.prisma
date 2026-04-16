@@ -20,6 +20,7 @@ enum QuestionType {
   SHORT_ANSWER
   MATCHING
   ORDERING
+  LAB_SIMULATION
 }
 
 enum ExamStatus {

@@ -73,6 +73,7 @@ export async function saveExamAction(_: ActionState, formData: FormData): Promis
               points: question.points,
               position: questionIndex,
               isCaseSensitive: question.isCaseSensitive ?? false,
+              config: question.config ? toJson(question.config) : Prisma.JsonNull,
               answerKey: question.answerKey ? toJson(question.answerKey) : Prisma.JsonNull,
               choiceOptions: question.options?.length
                 ? {
@@ -122,6 +123,7 @@ export async function saveExamAction(_: ActionState, formData: FormData): Promis
               points: question.points,
               position: questionIndex,
               isCaseSensitive: question.isCaseSensitive ?? false,
+              config: question.config ? toJson(question.config) : Prisma.JsonNull,
               answerKey: question.answerKey ? toJson(question.answerKey) : Prisma.JsonNull,
               choiceOptions: question.options?.length
                 ? {

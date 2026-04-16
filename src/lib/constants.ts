@@ -14,4 +14,5 @@ export const questionTypeOptions = [
   { value: "SHORT_ANSWER", label: "Short answer" },
   { value: "MATCHING", label: "Matching" },
   { value: "ORDERING", label: "Ordering" },
+  { value: "LAB_SIMULATION", label: "Interactive lab simulation" },
 ] as const;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeftRight, GripVertical, RotateCcw, X } from "lucide-react";
+import { ArrowLeftRight, FlaskConical, GripVertical, RotateCcw, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -208,6 +208,10 @@ function QuestionInput({
     return <MatchingQuestion question={question} value={value} onChange={onChange} />;
   }
 
+  if (question.type === "LAB_SIMULATION") {
+    return <LabSimulationQuestion question={question} value={value} onChange={onChange} />;
+  }
+
   return (
     <textarea
       rows={6}
@@ -223,6 +227,155 @@ function formatTime(totalSeconds: number) {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+function LabSimulationQuestion({
+  question,
+  value,
+  onChange,
+}: {
+  question: ExamSnapshot["sections"][number]["questions"][number];
+  value: unknown;
+  onChange: (value: unknown) => void;
+}) {
+  const config = question.config ?? null;
+  const components = config?.components ?? [];
+  const response = Array.isArray(value) ? value.map(String) : [];
+  const expectedLength = Array.isArray(question.answerKey) ? question.answerKey.length : 0;
+  const visibleMix = response
+    .map((item, index) => {
+      const component = components.find((entry) => entry.value === item);
+      return component ? { ...component, key: `${item}-${index}` } : null;
+    })
+    .filter((item): item is NonNullable<typeof item> => Boolean(item));
+  const fillHeight = Math.min(90, Math.max(12, visibleMix.length * 18));
+
+  return (
+    <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+      <div className="rounded-3xl bg-white p-5">
+        <div className="mb-4 flex items-center gap-3">
+          <div className="rounded-2xl bg-[var(--panel-soft)] p-3 text-[var(--brand)]">
+            <FlaskConical className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="font-semibold text-slate-900">{config?.experimentTitle ?? "Virtual chemistry lab"}</p>
+            <p className="text-sm text-slate-500">
+              {config?.resultLabel ?? "Use the reagent buttons to build the correct chemical mixture."}
+            </p>
+          </div>
+        </div>
+
+        <div className="grid gap-5 md:grid-cols-[220px_1fr]">
+          <div className="flex flex-col items-center justify-center rounded-[2rem] bg-[radial-gradient(circle_at_top,_rgba(148,163,184,0.18),_rgba(255,255,255,1)_58%)] p-4">
+            <div className="relative h-64 w-36 overflow-hidden rounded-b-[3rem] rounded-t-[1.5rem] border-[10px] border-slate-300 bg-slate-50 shadow-inner">
+              <div className="absolute inset-x-0 bottom-0 transition-all duration-300" style={{ height: `${fillHeight}%` }}>
+                {visibleMix.length ? (
+                  <div className="flex h-full flex-col-reverse">
+                    {visibleMix.map((component) => (
+                      <div
+                        key={component.key}
+                        className="flex-1 border-t border-white/30"
+                        style={{ backgroundColor: component.color }}
+                        title={component.label}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="h-full bg-[linear-gradient(180deg,rgba(191,219,254,0.15),rgba(191,219,254,0.45))]" />
+                )}
+              </div>
+            </div>
+            <p className="mt-3 text-sm font-medium text-slate-600">{config?.vesselLabel ?? "Mixing flask"}</p>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <p className="mb-2 text-sm font-medium text-slate-700">Reagent controls</p>
+              <div className="flex flex-wrap gap-2">
+                {components.map((component) => (
+                  <button
+                    key={component.value}
+                    type="button"
+                    onClick={() => onChange([...response, component.value])}
+                    className="rounded-2xl border px-4 py-3 text-left text-sm font-semibold text-slate-800 transition hover:scale-[1.01]"
+                    style={{ borderColor: component.color, backgroundColor: `${component.color}1A` }}
+                    title={component.effect}
+                  >
+                    {component.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-3xl bg-[var(--panel-soft)] p-4">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <p className="text-sm font-medium text-slate-700">Your mixing sequence</p>
+                <p className="text-xs text-slate-500">
+                  {response.length}
+                  {expectedLength ? ` / ${expectedLength}` : ""} steps
+                </p>
+              </div>
+              {visibleMix.length ? (
+                <div className="space-y-2">
+                  {visibleMix.map((component, index) => (
+                    <div key={component.key} className="flex items-center justify-between rounded-2xl bg-white px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <span
+                          className="h-3.5 w-3.5 rounded-full border border-white/60"
+                          style={{ backgroundColor: component.color }}
+                        />
+                        <div>
+                          <p className="text-sm font-semibold text-slate-800">
+                            Step {index + 1}: {component.label}
+                          </p>
+                          <p className="text-xs text-slate-500">{component.effect}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-[var(--line)] px-4 py-6 text-sm text-slate-400">
+                  Add reagents with the buttons to build the experiment.
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <Button variant="secondary" onClick={() => onChange(response.slice(0, -1))} disabled={!response.length}>
+                Remove last step
+              </Button>
+              <Button variant="ghost" onClick={() => onChange([])} disabled={!response.length}>
+                <RotateCcw className="mr-2 h-4 w-4" />
+                Reset mixture
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-4 rounded-3xl bg-white p-5">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--brand)]">Experiment goal</p>
+          <p className="mt-2 text-sm leading-7 text-slate-700">{question.prompt}</p>
+        </div>
+        <div className="rounded-3xl bg-[var(--panel-soft)] p-4 text-sm leading-7 text-slate-600">
+          {question.explanation ?? "Choose the right reagents in the right order to produce the expected result."}
+        </div>
+        <div className="grid gap-3">
+          {components.map((component) => (
+            <div key={component.value} className="rounded-2xl border border-[var(--line)] px-4 py-3">
+              <div className="flex items-center gap-3">
+                <span className="h-4 w-4 rounded-full" style={{ backgroundColor: component.color }} />
+                <p className="text-sm font-semibold text-slate-800">{component.label}</p>
+              </div>
+              <p className="mt-1 text-xs text-slate-500">{component.effect}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function FillBlankQuestion({
@@ -450,26 +603,27 @@ function MatchingQuestion({
   value: unknown;
   onChange: (value: unknown) => void;
 }) {
-  const pairs = question.matchingPairs ?? [];
+  const pairs = useMemo(() => question.matchingPairs ?? [], [question.matchingPairs]);
   const { dictionary } = useParticipantLanguage();
-  const response = Array.isArray(value) ? value.map(String) : [];
+  const response = useMemo(() => (Array.isArray(value) ? value.map(String) : []), [value]);
   const boardRef = useRef<HTMLDivElement | null>(null);
   const leftRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const rightRefs = useRef<Record<string, HTMLButtonElement | null>>({});
-  const [activeLeft, setActiveLeft] = useState<string | null>(pairs[0]?.leftLabel ?? null);
+  const firstLeft = pairs[0]?.leftLabel ?? null;
+  const [activeLeft, setActiveLeft] = useState<string | null>(firstLeft);
   const [lines, setLines] = useState<Array<{ key: string; x1: number; y1: number; x2: number; y2: number }>>([]);
-  const selectedMap = new Map(
-    response.map((item) => {
-      const [left, right] = item.split("->");
-      return [left, right];
-    }),
+  const selectedMap = useMemo(
+    () =>
+      new Map(
+        response.map((item) => {
+          const [left, right] = item.split("->");
+          return [left, right];
+        }),
+      ),
+    [response],
   );
   const rightChoices = pairs.map((pair) => pair.rightLabel);
-
-  useEffect(() => {
-    if (activeLeft && pairs.some((pair) => pair.leftLabel === activeLeft)) return;
-    setActiveLeft(pairs[0]?.leftLabel ?? null);
-  }, [activeLeft, pairs]);
+  const currentActiveLeft = activeLeft && pairs.some((pair) => pair.leftLabel === activeLeft) ? activeLeft : firstLeft;
 
   useEffect(() => {
     const updateLines = () => {
@@ -553,7 +707,7 @@ function MatchingQuestion({
                 onClick={() => setActiveLeft(pair.leftLabel)}
                 className={cn(
                   "flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition",
-                  activeLeft === pair.leftLabel
+                  currentActiveLeft === pair.leftLabel
                     ? "border-[var(--brand)] bg-[var(--panel-soft)] text-[var(--brand)]"
                     : "border-[var(--line)] bg-white text-slate-700",
                 )}
@@ -597,8 +751,8 @@ function MatchingQuestion({
                     rightRefs.current[rightLabel] = node;
                   }}
                   onClick={() => {
-                    if (!activeLeft) return;
-                    updatePair(activeLeft, rightLabel);
+                    if (!currentActiveLeft) return;
+                    updatePair(currentActiveLeft, rightLabel);
                   }}
                   className={cn(
                     "flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left text-sm font-medium transition",

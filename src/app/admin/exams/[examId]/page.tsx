@@ -5,7 +5,51 @@ import { PageHeader } from "@/components/shared/page-header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ExamBuilderForm } from "@/components/exam/exam-builder-form";
+import type { BuilderQuestion } from "@/components/exam/exam-builder-form";
 import { formatDate } from "@/lib/utils";
+
+function toBuilderLabConfig(value: unknown): BuilderQuestion["config"] | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+
+  const config = value as Record<string, unknown>;
+  if (
+    typeof config.experimentTitle !== "string" ||
+    typeof config.vesselLabel !== "string" ||
+    typeof config.resultLabel !== "string" ||
+    !Array.isArray(config.components)
+  ) {
+    return undefined;
+  }
+
+  const components = config.components
+    .map((component) => {
+      if (!component || typeof component !== "object" || Array.isArray(component)) return null;
+      const item = component as Record<string, unknown>;
+      if (
+        typeof item.label !== "string" ||
+        typeof item.value !== "string" ||
+        typeof item.color !== "string" ||
+        typeof item.effect !== "string"
+      ) {
+        return null;
+      }
+
+      return {
+        label: item.label,
+        value: item.value,
+        color: item.color,
+        effect: item.effect,
+      };
+    })
+    .filter((component): component is NonNullable<typeof component> => Boolean(component));
+
+  return {
+    experimentTitle: config.experimentTitle,
+    vesselLabel: config.vesselLabel,
+    resultLabel: config.resultLabel,
+    components,
+  };
+}
 
 export default async function ExamDetailPage({ params }: { params: Promise<{ examId: string }> }) {
   const { examId } = await params;
@@ -62,6 +106,7 @@ export default async function ExamDetailPage({ params }: { params: Promise<{ exa
                 type: question.type,
                 points: question.points,
                 isCaseSensitive: question.isCaseSensitive,
+                config: toBuilderLabConfig(question.config),
                 answerKey: question.answerKey ?? "",
                 options: question.choiceOptions.map((option) => ({
                   label: option.label,
