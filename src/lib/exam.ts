@@ -99,6 +99,16 @@ function arrayEquals(a: unknown[], b: unknown[]) {
   return JSON.stringify(a) === JSON.stringify(b);
 }
 
+function arraySetEquals(a: unknown[], b: unknown[]) {
+  return JSON.stringify([...a].sort()) === JSON.stringify([...b].sort());
+}
+
+function normalizeFillBlankResponse(response: Prisma.JsonValue) {
+  if (Array.isArray(response)) return response;
+  if (response === null || response === undefined) return [];
+  return [response];
+}
+
 export function gradeSubmission(snapshot: ExamSnapshot, draftAnswers: DraftAnswers) {
   const gradedAnswers: GradedAnswer[] = [];
   const sectionBreakdown: Array<{ sectionId: string; title: string; score: number; maxScore: number }> = [];
@@ -121,7 +131,7 @@ export function gradeSubmission(snapshot: ExamSnapshot, draftAnswers: DraftAnswe
         case "MULTIPLE_CHOICE": {
           const expected = (question.options ?? []).filter((option) => option.isCorrect).map((option) => option.value);
           const actual = Array.isArray(response) ? response : [response].filter(Boolean);
-          isCorrect = arrayEquals(actual, expected);
+          isCorrect = arraySetEquals(actual, expected);
           autoScore = isCorrect ? maxScore : 0;
           feedback = isCorrect ? "Correct choice." : "Review the selected option(s).";
           break;
@@ -135,8 +145,14 @@ export function gradeSubmission(snapshot: ExamSnapshot, draftAnswers: DraftAnswe
         }
         case "FILL_BLANK": {
           const validAnswers = Array.isArray(question.answerKey) ? question.answerKey : [question.answerKey];
-          const actual = normalizeString(response, question.isCaseSensitive);
-          isCorrect = validAnswers.some((answer) => normalizeString(answer, question.isCaseSensitive) === actual);
+          const actual = normalizeFillBlankResponse(response);
+          isCorrect =
+            actual.length === validAnswers.length &&
+            validAnswers.every(
+              (answer, index) =>
+                normalizeString(answer, question.isCaseSensitive) ===
+                normalizeString(actual[index], question.isCaseSensitive),
+            );
           autoScore = isCorrect ? maxScore : 0;
           feedback = isCorrect ? "Exact answer matched." : "The missing term needs revision.";
           break;

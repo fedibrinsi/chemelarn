@@ -1,10 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { ArrowLeftRight, GripVertical, RotateCcw, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import type { DraftAnswers, ExamSnapshot } from "@/lib/exam";
 
 type ExamRunnerProps = {
@@ -124,15 +126,29 @@ function QuestionInput({
   onChange: (value: unknown) => void;
 }) {
   if (question.type === "MULTIPLE_CHOICE") {
+    const multipleAllowed = (question.options ?? []).filter((option) => option.isCorrect).length > 1;
+    const selectedValues = Array.isArray(value) ? value.map(String) : [String(value ?? "")].filter(Boolean);
+
     return (
       <div className="grid gap-3">
         {(question.options ?? []).map((option) => (
           <label key={option.value} className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3">
             <input
-              type="radio"
+              type={multipleAllowed ? "checkbox" : "radio"}
               name={question.id}
-              checked={value === option.value}
-              onChange={() => onChange(option.value)}
+              checked={selectedValues.includes(option.value)}
+              onChange={() => {
+                if (!multipleAllowed) {
+                  onChange(option.value);
+                  return;
+                }
+
+                onChange(
+                  selectedValues.includes(option.value)
+                    ? selectedValues.filter((item) => item !== option.value)
+                    : [...selectedValues, option.value],
+                );
+              }}
             />
             {option.label}
           </label>
@@ -158,48 +174,297 @@ function QuestionInput({
     );
   }
 
+  if (question.type === "FILL_BLANK") {
+    return <FillBlankQuestion question={question} value={value} onChange={onChange} />;
+  }
+
   if (question.type === "ORDERING") {
-    return (
-      <textarea
-        className="min-h-28 w-full rounded-2xl border border-[var(--line)] bg-white px-4 py-3"
-        placeholder={'Enter the order as a JSON array, for example ["step 1", "step 2"]'}
-        value={Array.isArray(value) ? JSON.stringify(value) : ""}
-        onChange={(event) => onChange(parseTextArea(event.target.value))}
-      />
-    );
+    return <OrderingQuestion question={question} value={value} onChange={onChange} />;
   }
 
   if (question.type === "MATCHING") {
-    return (
-      <textarea
-        className="min-h-28 w-full rounded-2xl border border-[var(--line)] bg-white px-4 py-3"
-        placeholder={'Enter matches as a JSON array, for example ["acid->pH", "base->OH-"]'}
-        value={Array.isArray(value) ? JSON.stringify(value) : ""}
-        onChange={(event) => onChange(parseTextArea(event.target.value))}
-      />
-    );
+    return <MatchingQuestion question={question} value={value} onChange={onChange} />;
   }
 
   return (
     <textarea
       className="min-h-28 w-full rounded-2xl border border-[var(--line)] bg-white px-4 py-3"
-      placeholder={question.explanation ?? "Type your answer here"}
+      placeholder={question.placeholder ?? question.explanation ?? "Type your answer here"}
       value={typeof value === "string" ? value : ""}
       onChange={(event) => onChange(event.target.value)}
     />
   );
 }
 
-function parseTextArea(value: string) {
-  try {
-    return JSON.parse(value);
-  } catch {
-    return value;
-  }
-}
-
 function formatTime(totalSeconds: number) {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+function FillBlankQuestion({
+  question,
+  value,
+  onChange,
+}: {
+  question: ExamSnapshot["sections"][number]["questions"][number];
+  value: unknown;
+  onChange: (value: unknown) => void;
+}) {
+  const segments = useMemo(() => question.prompt.split("[[blank]]"), [question.prompt]);
+  const blankCount = Math.max(
+    segments.length - 1,
+    Array.isArray(question.answerKey) ? question.answerKey.length : 1,
+  );
+  const response = Array.isArray(value)
+    ? value.map((item) => String(item))
+    : typeof value === "string"
+      ? [value]
+      : Array.from({ length: blankCount }, () => "");
+  const paddedResponse = Array.from({ length: blankCount }, (_, index) => response[index] ?? "");
+  const [activeBlank, setActiveBlank] = useState(0);
+
+  function updateBlank(index: number, nextValue: string) {
+    const updated = paddedResponse.map((item, itemIndex) => (itemIndex === index ? nextValue : item));
+    onChange(blankCount === 1 ? updated[0] : updated);
+  }
+
+  function chooseOption(optionValue: string) {
+    updateBlank(activeBlank, optionValue);
+    const nextEmpty = paddedResponse.findIndex((item, index) => index > activeBlank && !item);
+    if (nextEmpty !== -1) setActiveBlank(nextEmpty);
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-3xl bg-white p-4 leading-8 text-slate-700">
+        {segments.length > 1
+          ? segments.map((segment, index) => (
+              <span key={`${segment}-${index}`}>
+                {segment}
+                {index < blankCount ? (
+                  <button
+                    type="button"
+                    onClick={() => setActiveBlank(index)}
+                    className={cn(
+                      "mx-2 inline-flex min-w-28 items-center justify-center rounded-2xl border px-3 py-2 text-sm font-semibold",
+                      activeBlank === index
+                        ? "border-[var(--brand)] bg-[var(--panel-soft)] text-[var(--brand)]"
+                        : "border-[var(--line)] bg-slate-50 text-slate-700",
+                    )}
+                  >
+                    {paddedResponse[index] || `Blank ${index + 1}`}
+                  </button>
+                ) : null}
+              </span>
+            ))
+          : Array.from({ length: blankCount }).map((_, index) => (
+              <div key={index} className="mb-3 flex items-center gap-3">
+                <span className="text-sm font-medium text-slate-500">Blank {index + 1}</span>
+                <button
+                  type="button"
+                  onClick={() => setActiveBlank(index)}
+                  className={cn(
+                    "inline-flex min-w-28 items-center justify-center rounded-2xl border px-3 py-2 text-sm font-semibold",
+                    activeBlank === index
+                      ? "border-[var(--brand)] bg-[var(--panel-soft)] text-[var(--brand)]"
+                      : "border-[var(--line)] bg-slate-50 text-slate-700",
+                  )}
+                >
+                  {paddedResponse[index] || "Choose answer"}
+                </button>
+              </div>
+            ))}
+      </div>
+
+      {(question.options ?? []).length > 0 ? (
+        <div className="space-y-3">
+          <p className="text-sm font-medium text-slate-700">Word bank</p>
+          <div className="flex flex-wrap gap-2">
+            {(question.options ?? []).map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => chooseOption(option.value)}
+                className="rounded-2xl border border-[var(--line)] bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:border-[var(--brand)] hover:text-[var(--brand)]"
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="grid gap-3 md:grid-cols-2">
+          {Array.from({ length: blankCount }).map((_, index) => (
+            <input
+              key={index}
+              value={paddedResponse[index]}
+              placeholder={`Blank ${index + 1}`}
+              className="rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-sm"
+              onFocus={() => setActiveBlank(index)}
+              onChange={(event) => updateBlank(index, event.target.value)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function OrderingQuestion({
+  question,
+  value,
+  onChange,
+}: {
+  question: ExamSnapshot["sections"][number]["questions"][number];
+  value: unknown;
+  onChange: (value: unknown) => void;
+}) {
+  const choices = question.options ?? [];
+  const current = Array.isArray(value)
+    ? value.map(String).filter((item) => choices.some((choice) => choice.value === item))
+    : [];
+  const remaining = choices.filter((choice) => !current.includes(choice.value));
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-3xl bg-white p-4">
+        <p className="mb-3 flex items-center gap-2 text-sm font-medium text-slate-700">
+          <GripVertical className="h-4 w-4 text-[var(--brand)]" />
+          Build the correct sequence
+        </p>
+        <div className="space-y-2">
+          {current.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-[var(--line)] px-4 py-6 text-sm text-slate-400">
+              Tap the blocks below in the correct order.
+            </div>
+          ) : (
+            current.map((item, index) => {
+              const option = choices.find((choice) => choice.value === item);
+              return (
+                <div key={`${item}-${index}`} className="flex items-center justify-between rounded-2xl border border-[var(--line)] bg-[var(--panel-soft)] px-4 py-3">
+                  <span className="text-sm font-semibold text-slate-700">
+                    {index + 1}. {option?.label ?? item}
+                  </span>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      onClick={() => onChange(moveArrayItem(current, index, -1))}
+                    >
+                      ←
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => onChange(moveArrayItem(current, index, 1))}
+                    >
+                      →
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => onChange(current.filter((_, itemIndex) => itemIndex !== index))}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <p className="text-sm font-medium text-slate-700">Available blocks</p>
+        <div className="flex flex-wrap gap-2">
+          {remaining.map((choice) => (
+            <button
+              key={choice.value}
+              type="button"
+              onClick={() => onChange([...current, choice.value])}
+              className="rounded-2xl border border-[var(--line)] bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:border-[var(--brand)] hover:text-[var(--brand)]"
+            >
+              {choice.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MatchingQuestion({
+  question,
+  value,
+  onChange,
+}: {
+  question: ExamSnapshot["sections"][number]["questions"][number];
+  value: unknown;
+  onChange: (value: unknown) => void;
+}) {
+  const pairs = question.matchingPairs ?? [];
+  const response = Array.isArray(value) ? value.map(String) : [];
+  const selectedMap = new Map(
+    response.map((item) => {
+      const [left, right] = item.split("->");
+      return [left, right];
+    }),
+  );
+
+  function updatePair(leftLabel: string, rightLabel: string) {
+    const next = pairs
+      .map((pair) =>
+        pair.leftLabel === leftLabel
+          ? `${pair.leftLabel}->${rightLabel}`
+          : selectedMap.get(pair.leftLabel)
+            ? `${pair.leftLabel}->${selectedMap.get(pair.leftLabel)}`
+            : null,
+      )
+      .filter(Boolean);
+    onChange(next);
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-3xl bg-white p-4">
+        <p className="mb-3 flex items-center gap-2 text-sm font-medium text-slate-700">
+          <ArrowLeftRight className="h-4 w-4 text-[var(--brand)]" />
+          Connect each term to the correct meaning
+        </p>
+        <div className="space-y-3">
+          {pairs.map((pair) => (
+            <div key={pair.leftLabel} className="grid gap-3 md:grid-cols-[1fr_auto_1fr] md:items-center">
+              <div className="rounded-2xl bg-[var(--panel-soft)] px-4 py-3 text-sm font-semibold text-slate-700">
+                {pair.leftLabel}
+              </div>
+              <div className="text-center text-xl text-[var(--brand)]">→</div>
+              <select
+                value={selectedMap.get(pair.leftLabel) ?? ""}
+                onChange={(event) => updatePair(pair.leftLabel, event.target.value)}
+                className="w-full rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-sm outline-none"
+              >
+                <option value="">Choose the correct match</option>
+                {pairs.map((option) => (
+                  <option key={option.rightLabel} value={option.rightLabel}>
+                    {option.rightLabel}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ))}
+        </div>
+      </div>
+      <Button variant="secondary" onClick={() => onChange([])}>
+        <RotateCcw className="mr-2 h-4 w-4" />
+        Reset matches
+      </Button>
+    </div>
+  );
+}
+
+function moveArrayItem(items: string[], index: number, direction: -1 | 1) {
+  const nextIndex = index + direction;
+  if (nextIndex < 0 || nextIndex >= items.length) return items;
+  const clone = [...items];
+  [clone[index], clone[nextIndex]] = [clone[nextIndex], clone[index]];
+  return clone;
 }

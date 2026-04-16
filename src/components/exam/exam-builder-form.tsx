@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -106,7 +106,7 @@ export function ExamBuilderForm({
   return (
     <form action={formAction} className="space-y-6">
       <input type="hidden" name="examId" value={examId ?? ""} />
-      <input type="hidden" name="payload" value={JSON.stringify(state)} />
+      <input type="hidden" name="payload" value={JSON.stringify(serializeBuilderState(state))} />
 
       <Card className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2 md:col-span-2">
@@ -217,125 +217,21 @@ export function ExamBuilderForm({
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Answer key</label>
+                  <label className="text-sm font-medium">Teacher note</label>
                   <Textarea
-                    value={JSON.stringify(question.answerKey ?? "", null, 0)}
+                    value={question.explanation ?? ""}
                     onChange={(event) =>
-                      updateQuestion(sectionIndex, questionIndex, { answerKey: safeParseJson(event.target.value) })
+                      updateQuestion(sectionIndex, questionIndex, { explanation: event.target.value })
                     }
-                    placeholder={`Examples: "reaction rate", true, ["A","B"], [{"left":"pH","right":"acidity"}]`}
+                    placeholder="Optional help text or correction note"
                   />
                 </div>
               </div>
 
-              {(question.type === "MULTIPLE_CHOICE" || question.type === "ORDERING") && (
-                <div className="mt-4 space-y-2">
-                  <p className="text-sm font-medium">Options</p>
-                  {(question.options ?? []).map((option, optionIndex) => (
-                    <div key={`${option.value}-${optionIndex}`} className="grid gap-3 md:grid-cols-[1fr_1fr_auto]">
-                      <Input
-                        value={option.label}
-                        placeholder="Label"
-                        onChange={(event) =>
-                          updateQuestion(sectionIndex, questionIndex, {
-                            options: (question.options ?? []).map((item, index) =>
-                              index === optionIndex ? { ...item, label: event.target.value } : item,
-                            ),
-                          })
-                        }
-                      />
-                      <Input
-                        value={option.value}
-                        placeholder="Value"
-                        onChange={(event) =>
-                          updateQuestion(sectionIndex, questionIndex, {
-                            options: (question.options ?? []).map((item, index) =>
-                              index === optionIndex ? { ...item, value: event.target.value } : item,
-                            ),
-                          })
-                        }
-                      />
-                      <label className="flex items-center gap-2 text-sm">
-                        <input
-                          type="checkbox"
-                          checked={Boolean(option.isCorrect)}
-                          onChange={(event) =>
-                            updateQuestion(sectionIndex, questionIndex, {
-                              options: (question.options ?? []).map((item, index) =>
-                                index === optionIndex ? { ...item, isCorrect: event.target.checked } : item,
-                              ),
-                            })
-                          }
-                        />
-                        Correct
-                      </label>
-                    </div>
-                  ))}
-                  <Button
-                    variant="secondary"
-                    onClick={() =>
-                      updateQuestion(sectionIndex, questionIndex, {
-                        options: [...(question.options ?? []), { label: "Option", value: "option", isCorrect: false }],
-                      })
-                    }
-                  >
-                    Add option
-                  </Button>
-                </div>
-              )}
-
-              {question.type === "MATCHING" && (
-                <div className="mt-4 space-y-2">
-                  <p className="text-sm font-medium">Matching pairs</p>
-                  {(question.pairs ?? []).map((pair, pairIndex) => (
-                    <div key={`${pair.leftLabel}-${pairIndex}`} className="grid gap-3 md:grid-cols-3">
-                      <Input
-                        value={pair.leftLabel}
-                        placeholder="Left item"
-                        onChange={(event) =>
-                          updateQuestion(sectionIndex, questionIndex, {
-                            pairs: (question.pairs ?? []).map((item, index) =>
-                              index === pairIndex ? { ...item, leftLabel: event.target.value } : item,
-                            ),
-                          })
-                        }
-                      />
-                      <Input
-                        value={pair.rightLabel}
-                        placeholder="Right item"
-                        onChange={(event) =>
-                          updateQuestion(sectionIndex, questionIndex, {
-                            pairs: (question.pairs ?? []).map((item, index) =>
-                              index === pairIndex ? { ...item, rightLabel: event.target.value } : item,
-                            ),
-                          })
-                        }
-                      />
-                      <Input
-                        value={pair.correctMatch}
-                        placeholder="Correct match value"
-                        onChange={(event) =>
-                          updateQuestion(sectionIndex, questionIndex, {
-                            pairs: (question.pairs ?? []).map((item, index) =>
-                              index === pairIndex ? { ...item, correctMatch: event.target.value } : item,
-                            ),
-                          })
-                        }
-                      />
-                    </div>
-                  ))}
-                  <Button
-                    variant="secondary"
-                    onClick={() =>
-                      updateQuestion(sectionIndex, questionIndex, {
-                        pairs: [...(question.pairs ?? []), { leftLabel: "Left", rightLabel: "Right", correctMatch: "Right" }],
-                      })
-                    }
-                  >
-                    Add pair
-                  </Button>
-                </div>
-              )}
+              <QuestionSettingsEditor
+                question={question}
+                onChange={(next) => updateQuestion(sectionIndex, questionIndex, next)}
+              />
             </div>
           ))}
           <Button variant="secondary" onClick={() => addQuestion(sectionIndex)}>
@@ -365,10 +261,303 @@ export function ExamBuilderForm({
   );
 }
 
-function safeParseJson(value: string) {
-  try {
-    return JSON.parse(value);
-  } catch {
-    return value;
+function QuestionSettingsEditor({
+  question,
+  onChange,
+}: {
+  question: BuilderQuestion;
+  onChange: (next: Partial<BuilderQuestion>) => void;
+}) {
+  if (question.type === "TRUE_FALSE") {
+    return (
+      <div className="mt-4 space-y-2">
+        <p className="text-sm font-medium">Correct answer</p>
+        <div className="flex gap-3">
+          {[
+            { label: "True", value: true },
+            { label: "False", value: false },
+          ].map((option) => (
+            <label key={String(option.value)} className="flex items-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm">
+              <input
+                type="radio"
+                checked={question.answerKey === option.value}
+                onChange={() => onChange({ answerKey: option.value })}
+              />
+              {option.label}
+            </label>
+          ))}
+        </div>
+      </div>
+    );
   }
+
+  if (question.type === "SHORT_ANSWER") {
+    return (
+      <div className="mt-4 space-y-2">
+        <p className="text-sm font-medium">Student placeholder</p>
+        <Input
+          value={question.placeholder ?? ""}
+          placeholder="Write a short explanation"
+          onChange={(event) => onChange({ placeholder: event.target.value })}
+        />
+      </div>
+    );
+  }
+
+  if (question.type === "MATCHING") {
+    return (
+      <div className="mt-4 space-y-2">
+        <p className="text-sm font-medium">Matching pairs</p>
+        <p className="text-xs text-slate-500">Students will connect the left idea to the correct right idea. No JSON is needed.</p>
+        {(question.pairs ?? []).map((pair, pairIndex) => (
+          <div key={`${pair.leftLabel}-${pairIndex}`} className="grid gap-3 md:grid-cols-[1fr_auto_1fr_auto]">
+            <Input
+              value={pair.leftLabel}
+              placeholder="Left term"
+              onChange={(event) =>
+                onChange({
+                  pairs: (question.pairs ?? []).map((item, index) =>
+                    index === pairIndex ? { ...item, leftLabel: event.target.value, correctMatch: `${event.target.value}->${item.rightLabel}` } : item,
+                  ),
+                })
+              }
+            />
+            <div className="flex items-center justify-center text-xl text-[var(--brand)]">→</div>
+            <Input
+              value={pair.rightLabel}
+              placeholder="Right meaning"
+              onChange={(event) =>
+                onChange({
+                  pairs: (question.pairs ?? []).map((item, index) =>
+                    index === pairIndex ? { ...item, rightLabel: event.target.value, correctMatch: `${item.leftLabel}->${event.target.value}` } : item,
+                  ),
+                })
+              }
+            />
+            <Button
+              variant="ghost"
+              onClick={() =>
+                onChange({
+                  pairs: (question.pairs ?? []).filter((_, index) => index !== pairIndex),
+                })
+              }
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        ))}
+        <Button
+          variant="secondary"
+          onClick={() =>
+            onChange({
+              pairs: [...(question.pairs ?? []), { leftLabel: "Left term", rightLabel: "Right match", correctMatch: "Left term->Right match" }],
+            })
+          }
+        >
+          Add pair
+        </Button>
+      </div>
+    );
+  }
+
+  if (question.type === "FILL_BLANK") {
+    return (
+      <div className="mt-4 space-y-3">
+        <p className="text-sm font-medium">Fill in the blank setup</p>
+        <p className="text-xs text-slate-500">
+          Use `[[blank]]` inside the prompt for each blank. Students can fill the blanks by clicking choices from a word bank.
+        </p>
+        <Input
+          value={Array.isArray(question.answerKey) ? question.answerKey.join(", ") : String(question.answerKey ?? "")}
+          placeholder="Correct answers in order, separated by commas"
+          onChange={(event) =>
+            onChange({
+              answerKey: event.target.value
+                .split(",")
+                .map((item) => item.trim())
+                .filter(Boolean),
+            })
+          }
+        />
+        <OptionEditor
+          question={question}
+          onChange={onChange}
+          mode="word-bank"
+        />
+      </div>
+    );
+  }
+
+  if (question.type === "ORDERING") {
+    return (
+      <div className="mt-4 space-y-3">
+        <p className="text-sm font-medium">Sequence blocks</p>
+        <p className="text-xs text-slate-500">Add the blocks in the correct order. Students will click them into place.</p>
+        <OptionEditor question={question} onChange={onChange} mode="ordering" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4 space-y-3">
+      <p className="text-sm font-medium">Answer choices</p>
+      <OptionEditor question={question} onChange={onChange} mode="multiple-choice" />
+    </div>
+  );
+}
+
+function OptionEditor({
+  question,
+  onChange,
+  mode,
+}: {
+  question: BuilderQuestion;
+  onChange: (next: Partial<BuilderQuestion>) => void;
+  mode: "multiple-choice" | "ordering" | "word-bank";
+}) {
+  return (
+    <div className="space-y-2">
+      {(question.options ?? []).map((option, optionIndex) => (
+        <div key={`${option.value}-${optionIndex}`} className="grid gap-3 md:grid-cols-[1fr_1fr_auto_auto_auto]">
+          <Input
+            value={option.label}
+            placeholder={mode === "word-bank" ? "Visible choice" : "Label"}
+            onChange={(event) =>
+              onChange({
+                options: (question.options ?? []).map((item, index) =>
+                  index === optionIndex
+                    ? { ...item, label: event.target.value, value: event.target.value || item.value }
+                    : item,
+                ),
+              })
+            }
+          />
+          <Input
+            value={option.value}
+            placeholder="Stored value"
+            onChange={(event) =>
+              onChange({
+                options: (question.options ?? []).map((item, index) =>
+                  index === optionIndex ? { ...item, value: event.target.value } : item,
+                ),
+              })
+            }
+          />
+          {mode === "multiple-choice" ? (
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={Boolean(option.isCorrect)}
+                onChange={(event) =>
+                  onChange({
+                    options: (question.options ?? []).map((item, index) =>
+                      index === optionIndex ? { ...item, isCorrect: event.target.checked } : item,
+                    ),
+                  })
+                }
+              />
+              Correct
+            </label>
+          ) : (
+            <div className="flex gap-1">
+              <Button
+                variant="ghost"
+                onClick={() =>
+                  onChange({
+                    options: moveItem(question.options ?? [], optionIndex, -1),
+                  })
+                }
+              >
+                <ArrowUp className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() =>
+                  onChange({
+                    options: moveItem(question.options ?? [], optionIndex, 1),
+                  })
+                }
+              >
+                <ArrowDown className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+          <Button
+            variant="ghost"
+            onClick={() =>
+              onChange({
+                options: (question.options ?? []).filter((_, index) => index !== optionIndex),
+              })
+            }
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      ))}
+      <Button
+        variant="secondary"
+        onClick={() =>
+          onChange({
+            options: [...(question.options ?? []), { label: "New choice", value: "new-choice", isCorrect: false }],
+          })
+        }
+      >
+        Add {mode === "word-bank" ? "word bank choice" : "option"}
+      </Button>
+    </div>
+  );
+}
+
+function moveItem<T>(items: T[], index: number, direction: -1 | 1) {
+  const nextIndex = index + direction;
+  if (nextIndex < 0 || nextIndex >= items.length) return items;
+  const clone = [...items];
+  [clone[index], clone[nextIndex]] = [clone[nextIndex], clone[index]];
+  return clone;
+}
+
+function serializeBuilderState(state: BuilderState): BuilderState {
+  return {
+    ...state,
+    sections: state.sections.map((section) => ({
+      ...section,
+      questions: section.questions.map((question) => ({
+        ...question,
+        answerKey: deriveAnswerKey(question),
+        pairs: question.pairs?.map((pair) => ({
+          ...pair,
+          correctMatch: `${pair.leftLabel}->${pair.rightLabel}`,
+        })),
+      })),
+    })),
+  };
+}
+
+function deriveAnswerKey(question: BuilderQuestion) {
+  if (question.type === "MULTIPLE_CHOICE") {
+    return (question.options ?? []).filter((option) => option.isCorrect).map((option) => option.value);
+  }
+
+  if (question.type === "TRUE_FALSE") {
+    return Boolean(question.answerKey);
+  }
+
+  if (question.type === "MATCHING") {
+    return (question.pairs ?? []).map((pair) => `${pair.leftLabel}->${pair.rightLabel}`);
+  }
+
+  if (question.type === "ORDERING") {
+    return (question.options ?? []).map((option) => option.value);
+  }
+
+  if (question.type === "FILL_BLANK") {
+    return Array.isArray(question.answerKey)
+      ? question.answerKey
+      : String(question.answerKey ?? "")
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean);
+  }
+
+  return question.answerKey;
 }

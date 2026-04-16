@@ -107,10 +107,17 @@ async function main() {
                 },
                 {
                   type: QuestionType.FILL_BLANK,
-                  prompt: "The smallest unit of an element is an ____.",
+                  prompt: "The smallest unit of an element is an [[blank]].",
                   points: 1,
                   position: 2,
                   answerKey: ["atom"],
+                  choiceOptions: {
+                    create: [
+                      { label: "atom", value: "atom", isCorrect: true, position: 0 },
+                      { label: "molecule", value: "molecule", isCorrect: false, position: 1 },
+                      { label: "reaction", value: "reaction", isCorrect: false, position: 2 },
+                    ],
+                  },
                 },
               ],
             },

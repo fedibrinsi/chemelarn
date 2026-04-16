@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import { FlaskConical, GraduationCap, LayoutDashboard, LogOut, MessageSquare, ScrollText, Settings, Users } from "lucide-react";
+import { ChemistryBackdrop } from "@/components/layout/chemistry-backdrop";
 import { cn } from "@/lib/utils";
 
 const icons = {
@@ -33,8 +34,9 @@ export function DashboardShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="shell grid min-h-screen lg:grid-cols-[280px_1fr]">
-      <aside className="border-b border-white/70 bg-white/65 p-6 backdrop-blur lg:border-b-0 lg:border-r">
+    <div className="shell relative grid min-h-screen overflow-hidden lg:grid-cols-[280px_1fr]">
+      <ChemistryBackdrop />
+      <aside className="relative z-10 border-b border-white/70 bg-white/68 p-6 backdrop-blur-xl lg:border-b-0 lg:border-r">
         <div className="rounded-[1.75rem] border border-[var(--line)] bg-[linear-gradient(160deg,#ffffff,#ecf9fb)] p-5">
           <p className="font-display text-2xl text-slate-900">{title}</p>
           <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{subtitle}</p>
@@ -64,7 +66,7 @@ export function DashboardShell({
           Sign out
         </button>
       </aside>
-      <main className="p-6 lg:p-8">{children}</main>
+      <main className="relative z-10 p-6 lg:p-8">{children}</main>
     </div>
   );
 }
