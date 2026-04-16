@@ -308,7 +308,9 @@ function QuestionSettingsEditor({
     return (
       <div className="mt-4 space-y-2">
         <p className="text-sm font-medium">Matching pairs</p>
-        <p className="text-xs text-slate-500">Students will connect the left idea to the correct right idea. No JSON is needed.</p>
+        <p className="text-xs text-slate-500">
+          Participants will connect the left idea to the correct right idea using a visible matching board.
+        </p>
         {(question.pairs ?? []).map((pair, pairIndex) => (
           <div key={`${pair.leftLabel}-${pairIndex}`} className="grid gap-3 md:grid-cols-[1fr_auto_1fr_auto]">
             <Input
@@ -365,7 +367,7 @@ function QuestionSettingsEditor({
       <div className="mt-4 space-y-3">
         <p className="text-sm font-medium">Fill in the blank setup</p>
         <p className="text-xs text-slate-500">
-          Use `[[blank]]` inside the prompt for each blank. Students can fill the blanks by clicking choices from a word bank.
+          Use `[[blank]]` inside the prompt for each blank. Participants can click or drag choices from the word bank into the blank slots.
         </p>
         <Input
           value={Array.isArray(question.answerKey) ? question.answerKey.join(", ") : String(question.answerKey ?? "")}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeftRight, GripVertical, RotateCcw, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -210,7 +210,8 @@ function QuestionInput({
 
   return (
     <textarea
-      className="min-h-28 w-full rounded-2xl border border-[var(--line)] bg-white px-4 py-3"
+      rows={6}
+      className="min-h-40 w-full resize-y rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-sm leading-7"
       placeholder={question.placeholder ?? question.explanation ?? "Type your answer here"}
       value={typeof value === "string" ? value : ""}
       onChange={(event) => onChange(event.target.value)}
@@ -258,6 +259,19 @@ function FillBlankQuestion({
     if (nextEmpty !== -1) setActiveBlank(nextEmpty);
   }
 
+  function clearBlank(index: number) {
+    updateBlank(index, "");
+    setActiveBlank(index);
+  }
+
+  function handleDrop(index: number, event: React.DragEvent<HTMLButtonElement | HTMLDivElement>) {
+    event.preventDefault();
+    const optionValue = event.dataTransfer.getData("text/plain");
+    if (!optionValue) return;
+    updateBlank(index, optionValue);
+    setActiveBlank(index);
+  }
+
   return (
     <div className="space-y-4">
       <div className="rounded-3xl bg-white p-4 leading-8 text-slate-700">
@@ -269,8 +283,10 @@ function FillBlankQuestion({
                   <button
                     type="button"
                     onClick={() => setActiveBlank(index)}
+                    onDragOver={(event) => event.preventDefault()}
+                    onDrop={(event) => handleDrop(index, event)}
                     className={cn(
-                      "mx-2 inline-flex min-w-28 items-center justify-center rounded-2xl border px-3 py-2 text-sm font-semibold",
+                      "mx-2 inline-flex min-w-32 items-center justify-center rounded-2xl border px-3 py-2 text-sm font-semibold transition",
                       activeBlank === index
                         ? "border-[var(--brand)] bg-[var(--panel-soft)] text-[var(--brand)]"
                         : "border-[var(--line)] bg-slate-50 text-slate-700",
@@ -287,8 +303,10 @@ function FillBlankQuestion({
                 <button
                   type="button"
                   onClick={() => setActiveBlank(index)}
+                  onDragOver={(event) => event.preventDefault()}
+                  onDrop={(event) => handleDrop(index, event)}
                   className={cn(
-                    "inline-flex min-w-28 items-center justify-center rounded-2xl border px-3 py-2 text-sm font-semibold",
+                    "inline-flex min-w-32 items-center justify-center rounded-2xl border px-3 py-2 text-sm font-semibold transition",
                     activeBlank === index
                       ? "border-[var(--brand)] bg-[var(--panel-soft)] text-[var(--brand)]"
                       : "border-[var(--line)] bg-slate-50 text-slate-700",
@@ -296,6 +314,11 @@ function FillBlankQuestion({
                 >
                   {paddedResponse[index] || "Choose answer"}
                 </button>
+                {paddedResponse[index] ? (
+                  <Button type="button" variant="ghost" onClick={() => clearBlank(index)}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                ) : null}
               </div>
             ))}
       </div>
@@ -304,12 +327,14 @@ function FillBlankQuestion({
         <div className="space-y-3">
           <p className="text-sm font-medium text-slate-700">{dictionary.wordBank}</p>
           <div className="flex flex-wrap gap-2">
-            {(question.options ?? []).map((option) => (
+            {(question.options ?? []).map((option, index) => (
               <button
-                key={option.value}
+                key={`${option.value}-${index}`}
                 type="button"
                 onClick={() => chooseOption(option.value)}
-                className="rounded-2xl border border-[var(--line)] bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:border-[var(--brand)] hover:text-[var(--brand)]"
+                draggable
+                onDragStart={(event) => event.dataTransfer.setData("text/plain", option.value)}
+                className="cursor-grab rounded-2xl border border-[var(--line)] bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-[var(--brand)] hover:text-[var(--brand)] active:cursor-grabbing"
               >
                 {option.label}
               </button>
@@ -428,54 +453,168 @@ function MatchingQuestion({
   const pairs = question.matchingPairs ?? [];
   const { dictionary } = useParticipantLanguage();
   const response = Array.isArray(value) ? value.map(String) : [];
+  const boardRef = useRef<HTMLDivElement | null>(null);
+  const leftRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const rightRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const [activeLeft, setActiveLeft] = useState<string | null>(pairs[0]?.leftLabel ?? null);
+  const [lines, setLines] = useState<Array<{ key: string; x1: number; y1: number; x2: number; y2: number }>>([]);
   const selectedMap = new Map(
     response.map((item) => {
       const [left, right] = item.split("->");
       return [left, right];
     }),
   );
+  const rightChoices = pairs.map((pair) => pair.rightLabel);
+
+  useEffect(() => {
+    if (activeLeft && pairs.some((pair) => pair.leftLabel === activeLeft)) return;
+    setActiveLeft(pairs[0]?.leftLabel ?? null);
+  }, [activeLeft, pairs]);
+
+  useEffect(() => {
+    const updateLines = () => {
+      const board = boardRef.current;
+      if (!board) return;
+      const boardRect = board.getBoundingClientRect();
+      const nextLines = pairs
+        .map((pair) => {
+          const selectedRight = selectedMap.get(pair.leftLabel);
+          if (!selectedRight) return null;
+
+          const leftNode = leftRefs.current[pair.leftLabel];
+          const rightNode = rightRefs.current[selectedRight];
+          if (!leftNode || !rightNode) return null;
+
+          const leftRect = leftNode.getBoundingClientRect();
+          const rightRect = rightNode.getBoundingClientRect();
+
+          return {
+            key: `${pair.leftLabel}-${selectedRight}`,
+            x1: leftRect.right - boardRect.left,
+            y1: leftRect.top + leftRect.height / 2 - boardRect.top,
+            x2: rightRect.left - boardRect.left,
+            y2: rightRect.top + rightRect.height / 2 - boardRect.top,
+          };
+        })
+        .filter((item): item is { key: string; x1: number; y1: number; x2: number; y2: number } => Boolean(item));
+
+      setLines(nextLines);
+    };
+
+    const frame = window.requestAnimationFrame(updateLines);
+    window.addEventListener("resize", updateLines);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("resize", updateLines);
+    };
+  }, [pairs, selectedMap]);
 
   function updatePair(leftLabel: string, rightLabel: string) {
+    const nextMap = new Map(selectedMap);
+
+    for (const [left, currentRight] of nextMap.entries()) {
+      if (currentRight === rightLabel && left !== leftLabel) {
+        nextMap.delete(left);
+      }
+    }
+
+    if (!rightLabel) {
+      nextMap.delete(leftLabel);
+    } else {
+      nextMap.set(leftLabel, rightLabel);
+    }
+
     const next = pairs
-      .map((pair) =>
-        pair.leftLabel === leftLabel
-          ? `${pair.leftLabel}->${rightLabel}`
-          : selectedMap.get(pair.leftLabel)
-            ? `${pair.leftLabel}->${selectedMap.get(pair.leftLabel)}`
-            : null,
-      )
+      .map((pair) => {
+        const currentRight = nextMap.get(pair.leftLabel);
+        return currentRight ? `${pair.leftLabel}->${currentRight}` : null;
+      })
       .filter(Boolean);
+
     onChange(next);
   }
 
   return (
     <div className="space-y-4">
-      <div className="rounded-3xl bg-white p-4">
+      <div ref={boardRef} className="relative overflow-hidden rounded-3xl bg-white p-4">
         <p className="mb-3 flex items-center gap-2 text-sm font-medium text-slate-700">
           <ArrowLeftRight className="h-4 w-4 text-[var(--brand)]" />
           {dictionary.connectTerms}
         </p>
-        <div className="space-y-3">
-          {pairs.map((pair) => (
-            <div key={pair.leftLabel} className="grid gap-3 md:grid-cols-[1fr_auto_1fr] md:items-center">
-              <div className="rounded-2xl bg-[var(--panel-soft)] px-4 py-3 text-sm font-semibold text-slate-700">
-                {pair.leftLabel}
-              </div>
-              <div className="text-center text-xl text-[var(--brand)]">→</div>
-              <select
-                value={selectedMap.get(pair.leftLabel) ?? ""}
-                onChange={(event) => updatePair(pair.leftLabel, event.target.value)}
-                className="w-full rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-sm outline-none"
+        <div className="grid gap-6 md:grid-cols-[1fr_120px_1fr]">
+          <div className="space-y-3">
+            {pairs.map((pair) => (
+              <button
+                key={pair.leftLabel}
+                type="button"
+                ref={(node) => {
+                  leftRefs.current[pair.leftLabel] = node;
+                }}
+                onClick={() => setActiveLeft(pair.leftLabel)}
+                className={cn(
+                  "flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition",
+                  activeLeft === pair.leftLabel
+                    ? "border-[var(--brand)] bg-[var(--panel-soft)] text-[var(--brand)]"
+                    : "border-[var(--line)] bg-white text-slate-700",
+                )}
               >
-                <option value="">{dictionary.chooseCorrectMatch}</option>
-                {pairs.map((option) => (
-                  <option key={option.rightLabel} value={option.rightLabel}>
-                    {option.rightLabel}
-                  </option>
-                ))}
-              </select>
-            </div>
-          ))}
+                <span>{pair.leftLabel}</span>
+                <span className="text-xs font-medium uppercase tracking-[0.2em]">
+                  {selectedMap.get(pair.leftLabel) ? "Linked" : "Select"}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          <div className="relative hidden md:block">
+            <svg className="absolute inset-0 h-full w-full overflow-visible pointer-events-none">
+              {lines.map((line) => (
+                <g key={line.key}>
+                  <line
+                    x1={line.x1}
+                    y1={line.y1}
+                    x2={line.x2}
+                    y2={line.y2}
+                    stroke="var(--brand)"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                  />
+                  <circle cx={line.x1} cy={line.y1} r="4" fill="var(--brand)" />
+                  <circle cx={line.x2} cy={line.y2} r="4" fill="var(--brand)" />
+                </g>
+              ))}
+            </svg>
+          </div>
+
+          <div className="space-y-3">
+            {rightChoices.map((rightLabel) => {
+              const linkedLeft = pairs.find((pair) => selectedMap.get(pair.leftLabel) === rightLabel)?.leftLabel;
+              return (
+                <button
+                  key={rightLabel}
+                  type="button"
+                  ref={(node) => {
+                    rightRefs.current[rightLabel] = node;
+                  }}
+                  onClick={() => {
+                    if (!activeLeft) return;
+                    updatePair(activeLeft, rightLabel);
+                  }}
+                  className={cn(
+                    "flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left text-sm font-medium transition",
+                    linkedLeft
+                      ? "border-[var(--brand)] bg-[var(--panel-soft)] text-[var(--brand)]"
+                      : "border-[var(--line)] bg-white text-slate-700 hover:border-[var(--brand)] hover:text-[var(--brand)]",
+                  )}
+                >
+                  <span>{rightLabel}</span>
+                  <span className="text-xs font-medium">
+                    {linkedLeft ? linkedLeft : dictionary.chooseCorrectMatch}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
       <Button variant="secondary" onClick={() => onChange([])}>
