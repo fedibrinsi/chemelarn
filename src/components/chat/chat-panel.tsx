@@ -19,10 +19,18 @@ export function ChatPanel({
   conversationId,
   title,
   initialMessages,
+  hint = "Lightweight near-realtime chat with automatic polling for Vercel-friendly deployment.",
+  placeholder = "Type a question or reply...",
+  sendingLabel = "Sending...",
+  sendLabel = "Send message",
 }: {
   conversationId: string;
   title: string;
   initialMessages: Message[];
+  hint?: string;
+  placeholder?: string;
+  sendingLabel?: string;
+  sendLabel?: string;
 }) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [body, setBody] = useState("");
@@ -72,9 +80,7 @@ export function ChatPanel({
     <Card className="space-y-4">
       <div>
         <h2 className="font-display text-2xl text-slate-900">{title}</h2>
-        <p className="text-sm text-[var(--muted)]">
-          Lightweight near-realtime chat with automatic polling for Vercel-friendly deployment.
-        </p>
+        <p className="text-sm text-[var(--muted)]">{hint}</p>
       </div>
       <div className="max-h-[420px] space-y-3 overflow-y-auto rounded-3xl bg-[var(--panel-soft)] p-4">
         {messages.map((message) => (
@@ -88,9 +94,9 @@ export function ChatPanel({
         ))}
       </div>
       <div className="space-y-3">
-        <Textarea value={body} onChange={(event) => setBody(event.target.value)} placeholder="Type a question or reply..." />
+        <Textarea value={body} onChange={(event) => setBody(event.target.value)} placeholder={placeholder} />
         <Button onClick={() => void sendMessage()} disabled={pending}>
-          {pending ? "Sending..." : "Send message"}
+          {pending ? sendingLabel : sendLabel}
         </Button>
       </div>
     </Card>

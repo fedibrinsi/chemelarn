@@ -5,6 +5,21 @@ export const loginSchema = z.object({
   password: z.string().min(6),
 });
 
+export const participantRegistrationSchema = z
+  .object({
+    name: z.string().min(2).max(80),
+    email: z.string().email(),
+    password: z.string().min(8).max(64),
+    confirmPassword: z.string().min(8).max(64),
+    gradeLevel: z.string().min(2).max(40),
+    schoolName: z.string().max(120).optional(),
+    studentNumber: z.string().max(40).optional(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match.",
+    path: ["confirmPassword"],
+  });
+
 export const redeemCodeSchema = z.object({
   code: z.string().min(4).max(32),
 });

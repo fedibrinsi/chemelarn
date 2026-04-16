@@ -1,14 +1,5 @@
-import { EnterCodeForm } from "@/components/forms/enter-code-form";
-import { PageHeader } from "@/components/shared/page-header";
+import { ParticipantEnterCodeContent } from "@/components/participant/enter-code-content";
 
 export default function EnterCodePage() {
-  return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Enter exam code"
-        description="Use the access code your teacher generated to open a secure exam session tied to your account."
-      />
-      <EnterCodeForm />
-    </div>
-  );
+  return <ParticipantEnterCodeContent />;
 }

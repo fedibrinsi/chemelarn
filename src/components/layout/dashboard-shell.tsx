@@ -26,15 +26,21 @@ export function DashboardShell({
   title,
   subtitle,
   nav,
+  signOutLabel = "Sign out",
+  topSlot,
+  dir = "ltr",
   children,
 }: {
   title: string;
   subtitle: string;
   nav: NavItem[];
+  signOutLabel?: string;
+  topSlot?: React.ReactNode;
+  dir?: "ltr" | "rtl";
   children: React.ReactNode;
 }) {
   return (
-    <div className="shell relative grid min-h-screen overflow-hidden lg:grid-cols-[280px_1fr]">
+    <div dir={dir} className="shell relative grid min-h-screen overflow-hidden lg:grid-cols-[280px_1fr]">
       <ChemistryBackdrop />
       <aside className="panel-frost relative z-10 border-b border-white/70 p-6 lg:border-b-0 lg:border-r">
         <div className="hero-glass chem-accent-ring rounded-[1.75rem] p-5">
@@ -63,10 +69,13 @@ export function DashboardShell({
           className="hero-glass chem-accent-ring mt-8 inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-medium text-slate-700"
         >
           <LogOut className="h-4 w-4" />
-          Sign out
+          {signOutLabel}
         </button>
       </aside>
-      <main className="relative z-10 p-6 lg:p-8">{children}</main>
+      <main className="relative z-10 p-6 lg:p-8">
+        {topSlot ? <div className="mb-6 flex justify-end">{topSlot}</div> : null}
+        {children}
+      </main>
     </div>
   );
 }

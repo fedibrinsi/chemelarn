@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useParticipantLanguage } from "@/components/participant/participant-language";
 import { cn } from "@/lib/utils";
 import type { DraftAnswers, ExamSnapshot } from "@/lib/exam";
 
@@ -19,6 +20,7 @@ type ExamRunnerProps = {
 
 export function ExamRunner({ sessionId, snapshot, initialAnswers, expiresAt, status }: ExamRunnerProps) {
   const router = useRouter();
+  const { dictionary } = useParticipantLanguage();
   const [answers, setAnswers] = useState<DraftAnswers>(initialAnswers);
   const [submitting, setSubmitting] = useState(false);
   const [timeLeft, setTimeLeft] = useState(snapshot.durationMinutes * 60);
@@ -73,10 +75,12 @@ export function ExamRunner({ sessionId, snapshot, initialAnswers, expiresAt, sta
       <Card className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="font-display text-3xl text-slate-900">{snapshot.title}</h1>
-          <p className="mt-2 text-sm leading-7 text-[var(--muted)]">{snapshot.instructions}</p>
+          <p className="mt-2 text-sm leading-7 text-[var(--muted)]">
+            {snapshot.instructions ?? dictionary.examInstructions}
+          </p>
         </div>
         <div className="rounded-3xl bg-[var(--panel-soft)] px-5 py-3 text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand)]">Time left</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand)]">{dictionary.timeLeft}</p>
           <p className="font-display text-3xl text-slate-900">{formatTime(timeLeft)}</p>
         </div>
       </Card>
@@ -110,7 +114,7 @@ export function ExamRunner({ sessionId, snapshot, initialAnswers, expiresAt, sta
       ))}
 
       <Button type="button" onClick={() => void submitNow(false)} disabled={submitting}>
-        {submitting ? "Submitting..." : "Submit exam"}
+        {submitting ? dictionary.submitting : dictionary.submitExam}
       </Button>
     </div>
   );
@@ -212,6 +216,7 @@ function FillBlankQuestion({
   onChange: (value: unknown) => void;
 }) {
   const segments = useMemo(() => question.prompt.split("[[blank]]"), [question.prompt]);
+  const { dictionary } = useParticipantLanguage();
   const blankCount = Math.max(
     segments.length - 1,
     Array.isArray(question.answerKey) ? question.answerKey.length : 1,
@@ -279,7 +284,7 @@ function FillBlankQuestion({
 
       {(question.options ?? []).length > 0 ? (
         <div className="space-y-3">
-          <p className="text-sm font-medium text-slate-700">Word bank</p>
+          <p className="text-sm font-medium text-slate-700">{dictionary.wordBank}</p>
           <div className="flex flex-wrap gap-2">
             {(question.options ?? []).map((option) => (
               <button
@@ -321,6 +326,7 @@ function OrderingQuestion({
   onChange: (value: unknown) => void;
 }) {
   const choices = question.options ?? [];
+  const { dictionary } = useParticipantLanguage();
   const current = Array.isArray(value)
     ? value.map(String).filter((item) => choices.some((choice) => choice.value === item))
     : [];
@@ -331,12 +337,12 @@ function OrderingQuestion({
       <div className="rounded-3xl bg-white p-4">
         <p className="mb-3 flex items-center gap-2 text-sm font-medium text-slate-700">
           <GripVertical className="h-4 w-4 text-[var(--brand)]" />
-          Build the correct sequence
+          {dictionary.buildSequence}
         </p>
         <div className="space-y-2">
           {current.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-[var(--line)] px-4 py-6 text-sm text-slate-400">
-              Tap the blocks below in the correct order.
+              {dictionary.sequenceHint}
             </div>
           ) : (
             current.map((item, index) => {
@@ -374,7 +380,7 @@ function OrderingQuestion({
       </div>
 
       <div className="space-y-2">
-        <p className="text-sm font-medium text-slate-700">Available blocks</p>
+        <p className="text-sm font-medium text-slate-700">{dictionary.availableBlocks}</p>
         <div className="flex flex-wrap gap-2">
           {remaining.map((choice) => (
             <button
@@ -402,6 +408,7 @@ function MatchingQuestion({
   onChange: (value: unknown) => void;
 }) {
   const pairs = question.matchingPairs ?? [];
+  const { dictionary } = useParticipantLanguage();
   const response = Array.isArray(value) ? value.map(String) : [];
   const selectedMap = new Map(
     response.map((item) => {
@@ -428,7 +435,7 @@ function MatchingQuestion({
       <div className="rounded-3xl bg-white p-4">
         <p className="mb-3 flex items-center gap-2 text-sm font-medium text-slate-700">
           <ArrowLeftRight className="h-4 w-4 text-[var(--brand)]" />
-          Connect each term to the correct meaning
+          {dictionary.connectTerms}
         </p>
         <div className="space-y-3">
           {pairs.map((pair) => (
@@ -442,7 +449,7 @@ function MatchingQuestion({
                 onChange={(event) => updatePair(pair.leftLabel, event.target.value)}
                 className="w-full rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-sm outline-none"
               >
-                <option value="">Choose the correct match</option>
+                <option value="">{dictionary.chooseCorrectMatch}</option>
                 {pairs.map((option) => (
                   <option key={option.rightLabel} value={option.rightLabel}>
                     {option.rightLabel}
@@ -455,7 +462,7 @@ function MatchingQuestion({
       </div>
       <Button variant="secondary" onClick={() => onChange([])}>
         <RotateCcw className="mr-2 h-4 w-4" />
-        Reset matches
+        {dictionary.resetMatches}
       </Button>
     </div>
   );

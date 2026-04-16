@@ -25,6 +25,12 @@ export default async function LoginPage() {
               <p>`student1@chemlearn.test` / `Student123!`</p>
               <p>`student2@chemlearn.test` / `Student123!`</p>
             </div>
+            <a
+              href="/register"
+              className="mt-4 inline-flex text-sm font-semibold text-[var(--brand)]"
+            >
+              Register a new participant
+            </a>
           </div>
         </div>
       </div>

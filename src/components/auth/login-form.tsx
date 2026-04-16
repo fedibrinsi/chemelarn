@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
@@ -68,6 +69,12 @@ export function LoginForm() {
           {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Login"}
         </Button>
       </form>
+      <div className="mt-5 text-center text-sm text-slate-600">
+        New participant?{" "}
+        <Link href="/register" className="font-semibold text-[var(--brand)]">
+          Create an account
+        </Link>
+      </div>
     </Card>
   );
 }

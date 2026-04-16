@@ -1,6 +1,5 @@
 import { Role } from "@prisma/client";
-import { ChatPanel } from "@/components/chat/chat-panel";
-import { PageHeader } from "@/components/shared/page-header";
+import { ParticipantChatContent } from "@/components/participant/chat-content";
 import { requireRole } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 
@@ -14,22 +13,15 @@ export default async function ParticipantChatPage() {
   });
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Help chat"
-        description="Ask for help if you are stuck, need clarification, or want support while using the platform."
-      />
-      <ChatPanel
-        conversationId={conversation.id}
-        title="Message the admin team"
-        initialMessages={conversation.messages.map((message) => ({
-          id: message.id,
-          body: message.body,
-          senderRole: message.senderRole,
-          createdAt: message.createdAt.toISOString(),
-          sender: { name: message.sender.name },
-        }))}
-      />
-    </div>
+    <ParticipantChatContent
+      conversationId={conversation.id}
+      initialMessages={conversation.messages.map((message) => ({
+        id: message.id,
+        body: message.body,
+        senderRole: message.senderRole,
+        createdAt: message.createdAt.toISOString(),
+        sender: { name: message.sender.name },
+      }))}
+    />
   );
 }
