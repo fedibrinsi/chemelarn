@@ -158,53 +158,62 @@ export default async function ParticipantDetailPage({
       <div className="space-y-6">
         {sessions.map((session) => (
           <Card key={session.id} className="space-y-4">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <p className="font-display text-2xl text-slate-900">{session.exam.title}</p>
-                <p className="text-sm text-slate-500">
-                  {getStatusLabel(session.status, session.submission?.status)} • opened {formatDate(session.createdAt)} • started{" "}
-                  {formatDate(session.startedAt)} • submitted {formatDate(session.submittedAt)}
-                </p>
-              </div>
-              <div className="rounded-3xl bg-[var(--panel-soft)] px-4 py-3 text-right">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand)]">
-                  {session.submission ? "Recorded score" : "Live saved score"}
-                </p>
-                <p className="font-display text-2xl text-slate-900">
-                  {formatScore(session.computedScore, session.computedMaxScore)} ({session.computedPercentage}%)
-                </p>
-              </div>
-            </div>
+            <details className="group rounded-3xl">
+              <summary className="cursor-pointer list-none">
+                <div className="flex flex-wrap items-start justify-between gap-3 rounded-3xl transition group-open:bg-[var(--panel-soft)] group-open:px-4 group-open:py-3">
+                  <div>
+                    <p className="font-display text-2xl text-slate-900">{session.exam.title}</p>
+                    <p className="text-sm text-slate-500">
+                      {getStatusLabel(session.status, session.submission?.status)} • opened {formatDate(session.createdAt)} • started{" "}
+                      {formatDate(session.startedAt)} • submitted {formatDate(session.submittedAt)}
+                    </p>
+                    <p className="mt-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand)]">
+                      Click to show answers
+                    </p>
+                  </div>
+                  <div className="rounded-3xl bg-[var(--panel-soft)] px-4 py-3 text-right">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand)]">
+                      {session.submission ? "Recorded score" : "Live saved score"}
+                    </p>
+                    <p className="font-display text-2xl text-slate-900">
+                      {formatScore(session.computedScore, session.computedMaxScore)} ({session.computedPercentage}%)
+                    </p>
+                  </div>
+                </div>
+              </summary>
 
-            {session.answers.length > 0 ? (
-              <div className="space-y-3">
-                {session.answers.map((answer, index) => {
-                  const tone = getAnswerTone(answer);
-                  return (
-                    <div key={`${session.id}-${answer.questionId}-${index}`} className="rounded-3xl border border-[var(--line)] bg-[var(--panel-soft)] p-4">
-                      <div className="flex flex-wrap items-start justify-between gap-3">
-                        <p className="font-semibold text-slate-900">{answer.prompt}</p>
-                        <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${tone.className}`}>
-                          {tone.badge}
-                        </span>
-                      </div>
-                      <p className="mt-3 text-sm text-slate-500">Participant response</p>
-                      <p className="mt-1 whitespace-pre-wrap break-words rounded-2xl bg-white px-4 py-3 text-sm text-slate-700">
-                        {formatResponse(answer.response)}
-                      </p>
-                      <p className="mt-3 text-sm font-medium text-slate-700">
-                        Score: {answer.finalScore}/{answer.maxScore}
-                      </p>
-                      {answer.feedback ? (
-                        <p className="mt-1 text-sm text-slate-500">{answer.feedback}</p>
-                      ) : null}
-                    </div>
-                  );
-                })}
+              <div className="mt-4">
+                {session.answers.length > 0 ? (
+                  <div className="space-y-3">
+                    {session.answers.map((answer, index) => {
+                      const tone = getAnswerTone(answer);
+                      return (
+                        <div key={`${session.id}-${answer.questionId}-${index}`} className="rounded-3xl border border-[var(--line)] bg-[var(--panel-soft)] p-4">
+                          <div className="flex flex-wrap items-start justify-between gap-3">
+                            <p className="font-semibold text-slate-900">{answer.prompt}</p>
+                            <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${tone.className}`}>
+                              {tone.badge}
+                            </span>
+                          </div>
+                          <p className="mt-3 text-sm text-slate-500">Participant response</p>
+                          <p className="mt-1 whitespace-pre-wrap break-words rounded-2xl bg-white px-4 py-3 text-sm text-slate-700">
+                            {formatResponse(answer.response)}
+                          </p>
+                          <p className="mt-3 text-sm font-medium text-slate-700">
+                            Score: {answer.finalScore}/{answer.maxScore}
+                          </p>
+                          {answer.feedback ? (
+                            <p className="mt-1 text-sm text-slate-500">{answer.feedback}</p>
+                          ) : null}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-500">No saved answers yet for this session.</p>
+                )}
               </div>
-            ) : (
-              <p className="text-sm text-slate-500">No saved answers yet for this session.</p>
-            )}
+            </details>
           </Card>
         ))}
       </div>
