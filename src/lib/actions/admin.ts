@@ -45,114 +45,97 @@ export async function saveExamAction(_: ActionState, formData: FormData): Promis
   }
 
   const payload = parsed.data;
+  const examData = {
+    title: payload.title,
+    description: payload.description,
+    durationMinutes: payload.durationMinutes,
+    status: payload.status,
+    availableFrom: normalizeOptionalDate(payload.availableFrom) ?? undefined,
+    availableUntil: normalizeOptionalDate(payload.availableUntil) ?? undefined,
+    allowResultReview: payload.allowResultReview,
+    allowPastSubmissions: payload.allowPastSubmissions,
+    instructions: payload.instructions,
+  };
 
-  const exam = await db.exam.upsert({
-    where: { id: examId || "missing" },
-    create: {
-      title: payload.title,
-      description: payload.description,
-      durationMinutes: payload.durationMinutes,
-      status: payload.status,
-      availableFrom: normalizeOptionalDate(payload.availableFrom) ?? undefined,
-      availableUntil: normalizeOptionalDate(payload.availableUntil) ?? undefined,
-      allowResultReview: payload.allowResultReview,
-      allowPastSubmissions: payload.allowPastSubmissions,
-      instructions: payload.instructions,
-      createdById: session.user.id,
-      sections: {
-        create: payload.sections.map((section, sectionIndex) => ({
-          title: section.title,
-          description: section.description,
-          position: sectionIndex,
-          questions: {
-            create: section.questions.map((question, questionIndex) => ({
-              type: question.type,
-              prompt: question.prompt,
-              explanation: question.explanation,
-              placeholder: question.placeholder,
-              points: question.points,
-              position: questionIndex,
-              isCaseSensitive: question.isCaseSensitive ?? false,
-              config: question.config ? toJson(question.config) : Prisma.JsonNull,
-              answerKey: question.answerKey ? toJson(question.answerKey) : Prisma.JsonNull,
-              choiceOptions: question.options?.length
-                ? {
-                    create: question.options.map((option, optionIndex) => ({
-                      ...option,
-                      isCorrect: option.isCorrect ?? false,
-                      position: optionIndex,
-                    })),
-                  }
-                : undefined,
-              matchingPairs: question.pairs?.length
-                ? {
-                    create: question.pairs.map((pair, pairIndex) => ({
-                      ...pair,
-                      position: pairIndex,
-                    })),
-                  }
-                : undefined,
-            })),
-          },
-        })),
-      },
+  const sectionCreates = payload.sections.map((section, sectionIndex) => ({
+    title: section.title,
+    description: section.description,
+    position: sectionIndex,
+    questions: {
+      create: section.questions.map((question, questionIndex) => ({
+        type: question.type,
+        prompt: question.prompt,
+        explanation: question.explanation,
+        placeholder: question.placeholder,
+        points: question.points,
+        position: questionIndex,
+        isCaseSensitive: question.isCaseSensitive ?? false,
+        config: question.config ? toJson(question.config) : Prisma.JsonNull,
+        answerKey: question.answerKey ? toJson(question.answerKey) : Prisma.JsonNull,
+        choiceOptions: question.options?.length
+          ? {
+              create: question.options.map((option, optionIndex) => ({
+                ...option,
+                isCorrect: option.isCorrect ?? false,
+                position: optionIndex,
+              })),
+            }
+          : undefined,
+        matchingPairs: question.pairs?.length
+          ? {
+              create: question.pairs.map((pair, pairIndex) => ({
+                ...pair,
+                position: pairIndex,
+              })),
+            }
+          : undefined,
+      })),
     },
-    update: {
-      title: payload.title,
-      description: payload.description,
-      durationMinutes: payload.durationMinutes,
-      status: payload.status,
-      availableFrom: normalizeOptionalDate(payload.availableFrom) ?? undefined,
-      availableUntil: normalizeOptionalDate(payload.availableUntil) ?? undefined,
-      allowResultReview: payload.allowResultReview,
-      allowPastSubmissions: payload.allowPastSubmissions,
-      instructions: payload.instructions,
-      version: { increment: 1 },
-      sections: {
-        deleteMany: {},
-        create: payload.sections.map((section, sectionIndex) => ({
-          title: section.title,
-          description: section.description,
-          position: sectionIndex,
-          questions: {
-            create: section.questions.map((question, questionIndex) => ({
-              type: question.type,
-              prompt: question.prompt,
-              explanation: question.explanation,
-              placeholder: question.placeholder,
-              points: question.points,
-              position: questionIndex,
-              isCaseSensitive: question.isCaseSensitive ?? false,
-              config: question.config ? toJson(question.config) : Prisma.JsonNull,
-              answerKey: question.answerKey ? toJson(question.answerKey) : Prisma.JsonNull,
-              choiceOptions: question.options?.length
-                ? {
-                    create: question.options.map((option, optionIndex) => ({
-                      ...option,
-                      isCorrect: option.isCorrect ?? false,
-                      position: optionIndex,
-                    })),
-                  }
-                : undefined,
-              matchingPairs: question.pairs?.length
-                ? {
-                    create: question.pairs.map((pair, pairIndex) => ({
-                      ...pair,
-                      position: pairIndex,
-                    })),
-                  }
-                : undefined,
-            })),
-          },
-        })),
+  }));
+
+  let exam;
+  if (examId) {
+    const existingExam = await db.exam.findUnique({
+      where: { id: examId },
+      select: { id: true },
+    });
+
+    if (!existingExam) {
+      return { success: false, message: "This exam no longer exists." };
+    }
+
+    exam = await db.exam.update({
+      where: { id: examId },
+      data: {
+        ...examData,
+        version: { increment: 1 },
+        sections: {
+          deleteMany: {},
+          create: sectionCreates,
+        },
       },
-    },
-    include: {
-      sections: {
-        include: { questions: { include: { choiceOptions: true, matchingPairs: true } } },
+      include: {
+        sections: {
+          include: { questions: { include: { choiceOptions: true, matchingPairs: true } } },
+        },
       },
-    },
-  });
+    });
+  } else {
+    exam = await db.exam.create({
+      data: {
+        ...examData,
+        createdById: session.user.id,
+        sections: {
+          create: sectionCreates,
+        },
+      },
+      include: {
+        sections: {
+          include: { questions: { include: { choiceOptions: true, matchingPairs: true } } },
+        },
+      },
+    });
+  }
 
   await logAdminAction(session.user.id, examId ? "exam.updated" : "exam.created", "Exam", exam.id, {
     title: exam.title,
