@@ -8,7 +8,7 @@ import { requireRole } from "@/lib/auth/session";
 import { examBuilderSchema, learningSummarySchema } from "@/lib/validations";
 import { randomCode } from "@/lib/utils";
 
-type ActionState = { success: boolean; message: string };
+type ActionState = { success: boolean; message: string; redirectTo?: string };
 
 function normalizeOptionalDate(value?: string) {
   return value ? new Date(value) : null;
@@ -97,11 +97,47 @@ export async function saveExamAction(_: ActionState, formData: FormData): Promis
   if (examId) {
     const existingExam = await db.exam.findUnique({
       where: { id: examId },
-      select: { id: true },
+      select: { id: true, status: true, version: true, _count: { select: { sessions: true } } },
     });
 
     if (!existingExam) {
       return { success: false, message: "This exam no longer exists." };
+    }
+
+    if (existingExam._count.sessions > 0) {
+      exam = await db.exam.create({
+        data: {
+          ...examData,
+          version: existingExam.version + 1,
+          createdById: session.user.id,
+          sections: {
+            create: sectionCreates,
+          },
+        },
+        include: {
+          sections: {
+            include: { questions: { include: { choiceOptions: true, matchingPairs: true } } },
+          },
+        },
+      });
+
+      await logAdminAction(session.user.id, "exam.version.created", "Exam", exam.id, {
+        sourceExamId: examId,
+        title: exam.title,
+        version: exam.version,
+        snapshot: buildExamSnapshot(exam),
+      });
+
+      revalidatePath("/admin");
+      revalidatePath("/admin/exams");
+      revalidatePath(`/admin/exams/${examId}`);
+      revalidatePath(`/admin/exams/${exam.id}`);
+
+      return {
+        success: true,
+        message: "This exam already has participant sessions, so a new version was created for your changes.",
+        redirectTo: `/admin/exams/${exam.id}`,
+      };
     }
 
     exam = await db.exam.update({
@@ -147,7 +183,11 @@ export async function saveExamAction(_: ActionState, formData: FormData): Promis
   revalidatePath("/admin/exams");
   revalidatePath(`/admin/exams/${exam.id}`);
 
-  return { success: true, message: examId ? "Exam updated." : "Exam created." };
+  return {
+    success: true,
+    message: examId ? "Exam updated." : "Exam created.",
+    redirectTo: examId ? undefined : `/admin/exams/${exam.id}`,
+  };
 }
 
 export async function generateExamCodeAction(examId: string) {

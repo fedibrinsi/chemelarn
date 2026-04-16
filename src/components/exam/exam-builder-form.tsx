@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -45,7 +46,7 @@ export type BuilderState = {
   }>;
 };
 
-const initialAction = { success: false, message: "" };
+const initialAction = { success: false, message: "", redirectTo: undefined as string | undefined };
 
 const starterQuestion: BuilderQuestion = {
   prompt: "What happens to the reaction rate when temperature increases?",
@@ -74,6 +75,7 @@ export function ExamBuilderForm({
   examId?: string;
   initialValue?: BuilderState;
 }) {
+  const router = useRouter();
   const [state, setState] = useState<BuilderState>(
     initialValue ?? {
       title: "New chemistry exam",
@@ -92,10 +94,13 @@ export function ExamBuilderForm({
     if (!actionState.message) return;
     if (actionState.success) {
       toast.success(actionState.message);
+      if (actionState.redirectTo) {
+        router.push(actionState.redirectTo);
+      }
       return;
     }
     toast.error(actionState.message);
-  }, [actionState]);
+  }, [actionState, router]);
 
   function updateQuestion(sectionIndex: number, questionIndex: number, next: Partial<BuilderQuestion>) {
     setState((current) => ({
