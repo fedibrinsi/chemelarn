@@ -36,8 +36,8 @@ export function DashboardShell({
   return (
     <div className="shell relative grid min-h-screen overflow-hidden lg:grid-cols-[280px_1fr]">
       <ChemistryBackdrop />
-      <aside className="relative z-10 border-b border-white/70 bg-white/68 p-6 backdrop-blur-xl lg:border-b-0 lg:border-r">
-        <div className="rounded-[1.75rem] border border-[var(--line)] bg-[linear-gradient(160deg,#ffffff,#ecf9fb)] p-5">
+      <aside className="panel-frost relative z-10 border-b border-white/70 p-6 lg:border-b-0 lg:border-r">
+        <div className="hero-glass chem-accent-ring rounded-[1.75rem] p-5">
           <p className="font-display text-2xl text-slate-900">{title}</p>
           <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{subtitle}</p>
         </div>
@@ -49,7 +49,7 @@ export function DashboardShell({
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-white/70",
+                  "chem-accent-ring hero-glass flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-slate-700 transition hover:translate-x-1 hover:text-[var(--brand)]",
                 )}
               >
                 <Icon className="h-4 w-4 text-[var(--brand)]" />
@@ -60,7 +60,7 @@ export function DashboardShell({
         </nav>
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
-          className="mt-8 inline-flex items-center gap-2 rounded-2xl border border-[var(--line)] bg-white px-4 py-2 text-sm font-medium text-slate-700"
+          className="hero-glass chem-accent-ring mt-8 inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-medium text-slate-700"
         >
           <LogOut className="h-4 w-4" />
           Sign out

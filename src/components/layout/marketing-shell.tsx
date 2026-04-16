@@ -7,7 +7,7 @@ export function MarketingShell({ children }: { children: React.ReactNode }) {
       <ChemistryBackdrop />
       <div className="relative z-10 mx-auto flex min-h-screen max-w-7xl flex-col px-6 py-8 lg:px-10">
         <header className="mb-14 flex items-center justify-between">
-          <div>
+          <div className="hero-glass chem-accent-ring rounded-[1.6rem] px-5 py-4">
             <p className="font-display text-2xl text-slate-900">{APP_NAME}</p>
             <p className="text-sm text-[var(--muted)]">Exam sessions, scoring, and student support</p>
           </div>

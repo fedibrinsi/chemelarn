@@ -16,8 +16,10 @@ const doodles = [
 export function ChemistryBackdrop() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
-      <div className="absolute inset-0 chem-wallpaper opacity-45" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.75),_rgba(244,251,253,0.86)_58%,_rgba(239,249,252,0.94))]" />
+      <div className="absolute inset-0 chem-wallpaper opacity-80" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.56),_rgba(244,251,253,0.7)_52%,_rgba(234,244,251,0.82))]" />
+      <div className="absolute inset-x-0 top-0 h-64 bg-[radial-gradient(circle_at_top,_rgba(105,174,255,0.22),_transparent_62%)]" />
+      <div className="absolute inset-x-0 bottom-0 h-56 bg-[radial-gradient(circle_at_bottom,_rgba(29,140,168,0.14),_transparent_62%)]" />
       <div className="absolute inset-0">
         {doodles.map(({ Icon, className, rotation }, index) => (
           <div
