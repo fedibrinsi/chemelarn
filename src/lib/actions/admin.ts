@@ -206,6 +206,21 @@ export async function generateExamCodeAction(examId: string) {
   revalidatePath(`/admin/exams/${examId}`);
 }
 
+export async function startExamNowAction(examId: string) {
+  const session = await requireRole(Role.ADMIN);
+
+  await db.exam.update({
+    where: { id: examId },
+    data: {
+      status: "PUBLISHED",
+      availableFrom: new Date(),
+    },
+  });
+
+  await logAdminAction(session.user.id, "exam.started", "Exam", examId);
+  revalidatePath(`/admin/exams/${examId}`);
+}
+
 export async function saveLearningSummaryAction(_: ActionState, formData: FormData): Promise<ActionState> {
   const session = await requireRole(Role.ADMIN);
   const parsed = learningSummarySchema.safeParse({

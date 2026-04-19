@@ -17,17 +17,17 @@ export function ChemistryBackdrop() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
       <div className="absolute inset-0 chem-wallpaper opacity-80" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.56),_rgba(244,251,253,0.7)_52%,_rgba(234,244,251,0.82))]" />
-      <div className="absolute inset-x-0 top-0 h-64 bg-[radial-gradient(circle_at_top,_rgba(105,174,255,0.22),_transparent_62%)]" />
-      <div className="absolute inset-x-0 bottom-0 h-56 bg-[radial-gradient(circle_at_bottom,_rgba(29,140,168,0.14),_transparent_62%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.58),_rgba(248,252,247,0.74)_52%,_rgba(238,247,239,0.82))]" />
+      <div className="absolute inset-x-0 top-0 h-64 bg-[radial-gradient(circle_at_top,_rgba(22,163,112,0.2),_transparent_62%)]" />
+      <div className="absolute inset-x-0 bottom-0 h-56 bg-[radial-gradient(circle_at_bottom,_rgba(245,159,61,0.16),_transparent_62%)]" />
       <div className="absolute inset-0">
         {doodles.map(({ Icon, className, rotation }, index) => (
           <div
             key={index}
-            className={`absolute text-[#11437b]/85 ${className}`}
+            className={`absolute text-[#0f5f47]/85 ${className}`}
             style={{ ["--rotation" as string]: rotation }}
           >
-            <Icon strokeWidth={1.4} className="h-full w-full drop-shadow-[0_8px_18px_rgba(17,67,123,0.08)]" />
+            <Icon strokeWidth={1.4} className="h-full w-full drop-shadow-[0_8px_18px_rgba(15,95,71,0.1)]" />
           </div>
         ))}
       </div>

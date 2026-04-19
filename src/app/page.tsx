@@ -17,45 +17,43 @@ export default async function HomePage() {
 
   return (
     <MarketingShell>
-      <section className="grid gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
-        <div className="space-y-6">
-          <span className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-white/70 px-4 py-2 text-sm font-medium text-[var(--muted)] shadow-sm backdrop-blur">
-            Chemistry-inspired online exams for schools
+      <section className="studio-hero grid gap-8 lg:grid-cols-[1.25fr_0.75fr]">
+        <div className="studio-intro chem-accent-ring rounded-[2.2rem] border border-white/75 p-7 md:p-10">
+          <span className="studio-chip inline-flex items-center rounded-full px-4 py-2 text-xs font-bold uppercase tracking-[0.22em]">
+            Periodic Chemistry Studio
           </span>
-          <div className="space-y-4">
-            <h1 className="font-display text-5xl leading-tight text-slate-900 md:text-6xl">
-              A calm digital lab where exams, feedback, and learning stay in one place.
-            </h1>
-            <p className="max-w-2xl text-lg leading-8 text-slate-600">
-              ChemLearn helps admins publish structured exams while participants join with secure
-              access codes, work in their own sessions, and receive fast scoring with clear
-              feedback.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <ButtonLink href="/login">Start with Login</ButtonLink>
+          <h1 className="mt-5 font-display text-5xl leading-[1.05] text-slate-900 md:text-7xl">
+            A bold chemistry design for high-school learners.
+          </h1>
+          <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-700">
+            This version feels like a science magazine mixed with an interactive lab wall, with
+            larger visual demos and clear chemistry guidance for students.
+          </p>
+          <div className="mt-7 flex flex-wrap gap-3">
+            <ButtonLink href="/login">Open Teacher Lab</ButtonLink>
             <ButtonLink href="/register" variant="secondary">
-              Register as Participant
+              Enter Student Zone
             </ButtonLink>
           </div>
         </div>
-        <div className="relative overflow-hidden rounded-[2rem] border border-white/70 bg-white/75 p-8 shadow-[0_30px_80px_rgba(15,23,42,0.12)] backdrop-blur">
-          <div className="absolute inset-x-6 top-6 h-24 rounded-full bg-[radial-gradient(circle,_rgba(96,165,250,0.18),_transparent_70%)]" />
-          <div className="relative grid gap-4">
-            {[
-              "Adaptive exam sessions with timer and autosave",
-              "Admin insights for submissions, averages, and live activity",
-              "Participant help chat and learning summaries after each exam",
-            ].map((item) => (
-              <div
-                key={item}
-                className="rounded-3xl border border-[var(--line)] bg-[var(--panel-soft)] p-5 text-sm font-medium text-slate-700"
-              >
-                {item}
-              </div>
-            ))}
+
+        <aside className="periodic-stack grid gap-4">
+          <div className="periodic-tile tile-primary">
+            <p className="tile-index">08</p>
+            <p className="tile-symbol">O</p>
+            <p className="tile-label">oxygen clues</p>
           </div>
-        </div>
+          <div className="periodic-tile tile-secondary">
+            <p className="tile-index">11</p>
+            <p className="tile-symbol">Na</p>
+            <p className="tile-label">electron transfer</p>
+          </div>
+          <div className="periodic-tile tile-tertiary">
+            <p className="tile-index">17</p>
+            <p className="tile-symbol">Cl</p>
+            <p className="tile-label">bond formation</p>
+          </div>
+        </aside>
       </section>
     </MarketingShell>
   );

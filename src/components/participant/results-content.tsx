@@ -7,6 +7,7 @@ import { useParticipantLanguage } from "@/components/participant/participant-lan
 
 type ResultsContentProps = {
   examTitle: string;
+  reviewOnly?: boolean;
   submission:
     | {
         score: number;
@@ -23,7 +24,7 @@ type ResultsContentProps = {
     | null;
 };
 
-export function ParticipantResultsContent({ examTitle, submission }: ResultsContentProps) {
+export function ParticipantResultsContent({ examTitle, submission, reviewOnly }: ResultsContentProps) {
   const { dictionary } = useParticipantLanguage();
 
   return (
@@ -31,7 +32,11 @@ export function ParticipantResultsContent({ examTitle, submission }: ResultsCont
       <PageHeader title={dictionary.resultsTitle} description={dictionary.resultsDescription} />
       <Card className="space-y-4">
         <p className="font-display text-3xl text-slate-900">{examTitle}</p>
-        {submission ? (
+        {reviewOnly ? (
+          <p className="text-sm text-slate-600">
+            Your answers were submitted successfully. The admin will review your submission soon.
+          </p>
+        ) : submission ? (
           <>
             <p className="text-lg font-medium text-slate-700">
               {dictionary.scoreLabel}: {formatScore(submission.score, submission.maxScore)} ({submission.percentage}%)

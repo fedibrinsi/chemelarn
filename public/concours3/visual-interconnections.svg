@@ -1,0 +1,37 @@
+<svg width="1400" height="700" viewBox="0 0 1400 700" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1400" height="700" rx="28" fill="#FBFDFF"/>
+  <rect x="30" y="30" width="1340" height="640" rx="24" fill="#FFFFFF" stroke="#D8E4F2"/>
+  <text x="70" y="95" font-family="Segoe UI" font-size="34" font-weight="700" fill="#1F3D68">Carte des interconnexions ODD</text>
+
+  <g stroke="#7BA3D8" stroke-width="4" stroke-linecap="round">
+    <line x1="260" y1="320" x2="450" y2="210"/>
+    <line x1="450" y1="210" x2="700" y2="170"/>
+    <line x1="700" y1="170" x2="930" y2="250"/>
+    <line x1="930" y1="250" x2="1120" y2="390"/>
+    <line x1="700" y1="170" x2="700" y2="430"/>
+    <line x1="450" y1="210" x2="700" y2="430"/>
+    <line x1="260" y1="320" x2="700" y2="430"/>
+  </g>
+
+  <g font-family="Segoe UI" font-size="26" font-weight="700" text-anchor="middle">
+    <circle cx="260" cy="320" r="78" fill="#E8F7F3" stroke="#8FD4C7"/>
+    <text x="260" y="326" fill="#145A50">ODD 3</text>
+
+    <circle cx="450" cy="210" r="78" fill="#F0F5FF" stroke="#B7C9F0"/>
+    <text x="450" y="216" fill="#274C89">ODD 4</text>
+
+    <circle cx="700" cy="170" r="78" fill="#E9F6FF" stroke="#9FCFEA"/>
+    <text x="700" y="176" fill="#165C80">ODD 6</text>
+
+    <circle cx="930" cy="250" r="78" fill="#FFF4E8" stroke="#F2CFA2"/>
+    <text x="930" y="256" fill="#A05F22">ODD 12</text>
+
+    <circle cx="1120" cy="390" r="78" fill="#FDEEEE" stroke="#F0B8B8"/>
+    <text x="1120" y="396" fill="#9A3535">ODD 13</text>
+
+    <circle cx="700" cy="430" r="92" fill="#F3F0FF" stroke="#CFBFF1"/>
+    <text x="700" y="438" fill="#5A3D8C">ODD 17</text>
+  </g>
+
+  <text x="70" y="620" font-family="Segoe UI" font-size="20" fill="#4D607A">Consigne: relier au moins 4 liens logiques avec justification courte.</text>
+</svg>

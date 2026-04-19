@@ -1,0 +1,47 @@
+<svg width="1400" height="700" viewBox="0 0 1400 700" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1400" height="700" rx="28" fill="#F8FFFC"/>
+  <rect x="30" y="30" width="1340" height="640" rx="24" fill="#FFFFFF" stroke="#D6E5E2"/>
+  <text x="70" y="95" font-family="Segoe UI" font-size="34" font-weight="700" fill="#0F4B56">Un espace en transition</text>
+
+  <g transform="translate(70,130)">
+    <rect width="280" height="180" rx="18" fill="#FFF3EF" stroke="#F2C4B7"/>
+    <text x="20" y="42" font-family="Segoe UI" font-size="20" font-weight="600" fill="#A34B34">Problèmes</text>
+    <text x="20" y="78" font-family="Segoe UI" font-size="16" fill="#6A3B2C">• Bouteilles jetables</text>
+    <text x="20" y="105" font-family="Segoe UI" font-size="16" fill="#6A3B2C">• Gaspillage d'énergie</text>
+    <text x="20" y="132" font-family="Segoe UI" font-size="16" fill="#6A3B2C">• Fuites d'eau</text>
+    <text x="20" y="159" font-family="Segoe UI" font-size="16" fill="#6A3B2C">• Faible engagement</text>
+  </g>
+
+  <g transform="translate(390,130)">
+    <rect width="430" height="250" rx="18" fill="#EFFAF7" stroke="#BFE4DC"/>
+    <text x="20" y="42" font-family="Segoe UI" font-size="20" font-weight="600" fill="#0F5C50">Actions combinées</text>
+    <text x="20" y="82" font-family="Segoe UI" font-size="16" fill="#205850">• Fontaines + gourdes</text>
+    <text x="20" y="112" font-family="Segoe UI" font-size="16" fill="#205850">• Réparation des fuites</text>
+    <text x="20" y="142" font-family="Segoe UI" font-size="16" fill="#205850">• Tri + compost</text>
+    <text x="20" y="172" font-family="Segoe UI" font-size="16" fill="#205850">• Extinction intelligente / LED</text>
+  </g>
+
+  <g transform="translate(860,130)">
+    <rect width="470" height="250" rx="18" fill="#EEF4FF" stroke="#C8D8F4"/>
+    <text x="20" y="42" font-family="Segoe UI" font-size="20" font-weight="600" fill="#2B4C7E">Effets</text>
+    <text x="20" y="82" font-family="Segoe UI" font-size="16" fill="#2B4C7E">• Moins de déchets</text>
+    <text x="20" y="112" font-family="Segoe UI" font-size="16" fill="#2B4C7E">• Moins d'eau gaspillée</text>
+    <text x="20" y="142" font-family="Segoe UI" font-size="16" fill="#2B4C7E">• Moins de dépenses</text>
+    <text x="20" y="172" font-family="Segoe UI" font-size="16" fill="#2B4C7E">• Plus de participation</text>
+  </g>
+
+  <path d="M350 235H390" stroke="#0F766E" stroke-width="4" stroke-linecap="round"/>
+  <path d="M820 255H860" stroke="#0F766E" stroke-width="4" stroke-linecap="round"/>
+
+  <g transform="translate(540,430)">
+    <circle cx="160" cy="120" r="86" fill="#FFFFFF" stroke="#D4E4E1"/>
+    <path d="M160 34A86 86 0 0 1 236 74L160 120V34Z" fill="#0F766E"/>
+    <path d="M236 74A86 86 0 0 1 243 173L160 120L236 74Z" fill="#2A9D8F"/>
+    <path d="M243 173A86 86 0 0 1 175 205L160 120L243 173Z" fill="#E9C46A"/>
+    <path d="M175 205A86 86 0 0 1 96 182L160 120L175 205Z" fill="#F4A261"/>
+    <path d="M96 182A86 86 0 0 1 80 84L160 120L96 182Z" fill="#E76F51"/>
+    <path d="M80 84A86 86 0 0 1 160 34L160 120L80 84Z" fill="#457B9D"/>
+  </g>
+
+  <text x="490" y="640" font-family="Segoe UI" font-size="24" font-weight="700" fill="#0F4B56">Une seule action peut toucher plusieurs ODD en même temps</text>
+</svg>

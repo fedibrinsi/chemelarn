@@ -243,11 +243,14 @@ type ParticipantLanguageContextValue = {
 const ParticipantLanguageContext = createContext<ParticipantLanguageContextValue | null>(null);
 
 export function ParticipantLanguageProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocale] = useState<ParticipantLocale>(() => {
-    if (typeof window === "undefined") return "en";
+  const [locale, setLocale] = useState<ParticipantLocale>("en");
+
+  useEffect(() => {
     const stored = window.localStorage.getItem("participant-locale") as ParticipantLocale | null;
-    return stored && stored in translations ? stored : "en";
-  });
+    if (stored && stored in translations) {
+      setLocale(stored);
+    }
+  }, []);
 
   useEffect(() => {
     window.localStorage.setItem("participant-locale", locale);

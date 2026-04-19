@@ -1,5 +1,7 @@
 export const APP_NAME = "ChemLearn Exam Lab";
 
+export const CONCOURS3_ACCESS_CODE = "CONCOURS3-ODD-2026";
+
 export const sessionStatuses = {
   NOT_STARTED: "Not started",
   IN_PROGRESS: "In progress",

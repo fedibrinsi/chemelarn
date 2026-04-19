@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { generateExamCodeAction } from "@/lib/actions/admin";
+import { generateExamCodeAction, startExamNowAction } from "@/lib/actions/admin";
 import { db } from "@/lib/db";
 import { PageHeader } from "@/components/shared/page-header";
 import { Card } from "@/components/ui/card";
@@ -78,9 +78,14 @@ export default async function ExamDetailPage({ params }: { params: Promise<{ exa
         title={exam.title}
         description="Edit the full exam blueprint, then generate secure access codes for student sessions."
         action={
-          <form action={generateExamCodeAction.bind(null, exam.id)}>
-            <Button type="submit">Generate access code</Button>
-          </form>
+          <div className="flex flex-wrap gap-2">
+            <form action={generateExamCodeAction.bind(null, exam.id)}>
+              <Button type="submit">Generate access code</Button>
+            </form>
+            <form action={startExamNowAction.bind(null, exam.id)}>
+              <Button type="submit" variant="secondary">Start exam now</Button>
+            </form>
+          </div>
         }
       />
       <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">

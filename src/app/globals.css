@@ -1,18 +1,18 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f4fbfd;
-  --foreground: #102033;
+  --background: #fffaf4;
+  --foreground: #1f2940;
   --panel: rgba(255, 255, 255, 0.9);
-  --panel-soft: #eef8fb;
+  --panel-soft: #fff1df;
   --line: rgba(148, 163, 184, 0.25);
-  --brand: #1d8ca8;
-  --brand-strong: #126782;
-  --accent: #8bd3c7;
-  --warning: #f2be5c;
+  --brand: #0f766e;
+  --brand-strong: #0f4b56;
+  --accent: #e76f51;
+  --warning: #f4a261;
   --danger: #ec6d63;
-  --success: #3aa981;
-  --muted: #52657f;
+  --success: #2a9d8f;
+  --muted: #5b647a;
 }
 
 @theme inline {
@@ -29,9 +29,10 @@
 html {
   min-height: 100%;
   background:
-    radial-gradient(circle at top left, rgba(104, 169, 255, 0.42), transparent 28%),
-    radial-gradient(circle at 85% 18%, rgba(110, 215, 193, 0.3), transparent 20%),
-    linear-gradient(180deg, #fdfefe 0%, #eef6fb 48%, #e8f2fb 100%);
+    radial-gradient(circle at 8% 12%, rgba(15, 118, 110, 0.2), transparent 24%),
+    radial-gradient(circle at 92% 14%, rgba(231, 111, 81, 0.18), transparent 26%),
+    radial-gradient(circle at 50% 100%, rgba(31, 41, 64, 0.08), transparent 32%),
+    linear-gradient(165deg, #f8fffc 0%, #edf7f4 48%, #e5efe9 100%);
 }
 
 body {
@@ -67,8 +68,21 @@ select {
 .shell {
   min-height: 100vh;
   background:
-    radial-gradient(circle at top right, rgba(191, 219, 254, 0.34), transparent 28%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.44), rgba(238, 246, 251, 0.82));
+    linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(239, 248, 243, 0.82)),
+    repeating-linear-gradient(
+      90deg,
+      rgba(15, 75, 86, 0.05) 0,
+      rgba(15, 75, 86, 0.05) 1px,
+      transparent 1px,
+      transparent 32px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      rgba(15, 75, 86, 0.04) 0,
+      rgba(15, 75, 86, 0.04) 1px,
+      transparent 1px,
+      transparent 32px
+    );
 }
 
 .card-shadow {
@@ -118,13 +132,13 @@ select {
 .hero-glass {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.7));
   backdrop-filter: blur(14px);
-  box-shadow: 0 24px 80px rgba(17, 67, 123, 0.08);
+  box-shadow: 0 24px 80px rgba(15, 75, 86, 0.1);
 }
 
 .panel-frost {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(245, 251, 255, 0.72)),
-    radial-gradient(circle at top, rgba(96, 165, 250, 0.08), transparent 38%);
+    radial-gradient(circle at top, rgba(231, 111, 81, 0.12), transparent 38%);
   backdrop-filter: blur(16px);
 }
 
@@ -138,11 +152,75 @@ select {
   inset: -1px;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(135deg, rgba(17, 67, 123, 0.24), rgba(29, 140, 168, 0.08), rgba(17, 67, 123, 0.18));
+  background: linear-gradient(135deg, rgba(15, 75, 86, 0.22), rgba(231, 111, 81, 0.16), rgba(15, 75, 86, 0.14));
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
+}
+
+.studio-hero {
+  align-items: stretch;
+}
+
+.studio-intro {
+  background:
+    linear-gradient(152deg, rgba(255, 255, 255, 0.9), rgba(255, 239, 219, 0.86)),
+    radial-gradient(circle at right top, rgba(42, 157, 143, 0.16), transparent 42%);
+  box-shadow: 0 24px 66px rgba(31, 41, 64, 0.08);
+}
+
+.studio-chip {
+  color: var(--brand-strong);
+  background: linear-gradient(135deg, rgba(15, 118, 110, 0.2), rgba(244, 162, 97, 0.24));
+}
+
+.periodic-stack {
+  align-content: start;
+}
+
+.periodic-tile {
+  border-radius: 1.5rem;
+  padding: 1.2rem 1.1rem;
+  border: 1px solid color-mix(in srgb, var(--brand) 22%, white);
+  box-shadow: 0 14px 36px rgba(31, 41, 64, 0.08);
+}
+
+.tile-primary {
+  background: linear-gradient(180deg, rgba(15, 118, 110, 0.86), rgba(42, 157, 143, 0.76));
+  color: #f6fffd;
+}
+
+.tile-secondary {
+  background: linear-gradient(180deg, rgba(244, 162, 97, 0.86), rgba(231, 111, 81, 0.8));
+  color: #fff8f3;
+}
+
+.tile-tertiary {
+  background: linear-gradient(180deg, rgba(23, 35, 66, 0.9), rgba(45, 58, 96, 0.84));
+  color: #eff4ff;
+}
+
+.tile-index {
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-weight: 700;
+  opacity: 0.86;
+}
+
+.tile-symbol {
+  margin-top: 0.25rem;
+  font-family: var(--font-display), serif;
+  font-size: 2.1rem;
+  line-height: 1;
+}
+
+.tile-label {
+  margin-top: 0.35rem;
+  font-size: 0.82rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 @media (prefers-reduced-motion: reduce) {

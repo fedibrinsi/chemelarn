@@ -7,6 +7,7 @@ import { requireRole } from "@/lib/auth/session";
 import { buildExamSnapshot, gradeSubmission, type DraftAnswers } from "@/lib/exam";
 import { minutesFromNow } from "@/lib/utils";
 import { redeemCodeSchema } from "@/lib/validations";
+import { CONCOURS3_ACCESS_CODE } from "@/lib/constants";
 
 type ActionState = { success: boolean; message: string; redirectTo?: string };
 export type SubmitSessionResult = {
@@ -15,6 +16,187 @@ export type SubmitSessionResult = {
 
 function toJson(value: unknown): Prisma.InputJsonValue {
   return JSON.parse(JSON.stringify(value));
+}
+
+const concoursThreeQuestions = [
+  { prompt: "Question flash: L'idee principale de l'animation", points: 1 },
+  { prompt: "Q1. Les ODD doivent etre compris comme:", points: 3 },
+  { prompt: "Q2. Les ODD couvrent principalement:", points: 3 },
+  { prompt: "Q3. Quel exemple montre le mieux l'interconnexion des ODD ?", points: 3 },
+  { prompt: "Q4. Une ville durable repose surtout sur:", points: 3 },
+  { prompt: "Q5. Le comportement le plus coherent avec l'ODD 12 (consommation responsable) est:", points: 3 },
+  { prompt: "Q6. L'expression personne ne gagne seul met surtout en avant:", points: 3 },
+  { prompt: "Q7. Quel projet de lycee correspond le mieux a une approche ODD ?", points: 3 },
+  { prompt: "Q8. L'epuisement des ressources naturelles concerne:", points: 3 },
+  { prompt: "Q9. Quel binome d'ODD est le plus directement mobilise par le tri, la reduction des dechets et la baisse des emissions ?", points: 3 },
+  { prompt: "Q10. Dans une pedagogie ODD efficace, l'eleve doit etre:", points: 3 },
+  { prompt: "Q11. Former autrement aujourd'hui pour permettre aux eleves d'agir demain signifie surtout:", points: 3 },
+  { prompt: "Q12. Quelle proposition est la plus systemique ?", points: 3 },
+  { prompt: "Q13. Une approche holistique des ODD signifie:", points: 4 },
+  { prompt: "Q14. Quel projet evite le mieux le greenwashing ?", points: 4 },
+  { prompt: "Q15. Pour un projet ODD dans un lycee, le partenariat le plus coherent est:", points: 4 },
+  { prompt: "Q16. Quand un etablissement ameliore l'acces a l'eau potable, cela peut aussi ameliorer:", points: 4 },
+  { prompt: "Q17. Quel ensemble d'indicateurs permet le mieux de suivre un projet ODD au lycee ?", points: 4 },
+  { prompt: "Q18. Une action ecologique devient plus juste socialement quand:", points: 4 },
+  { prompt: "Defi visuel 1: Carte des interconnexions", points: 20 },
+  { prompt: "Defi visuel 2: Diagnostic", points: 20 },
+] as const;
+
+async function ensureConcoursThreeAccessCode(currentUserId: string) {
+  const existingCode = await db.examAccessCode.findUnique({
+    where: { code: CONCOURS3_ACCESS_CODE },
+    include: {
+      exam: {
+        include: {
+          sections: {
+            orderBy: { position: "asc" },
+            include: {
+              questions: {
+                orderBy: { position: "asc" },
+                include: { choiceOptions: true, matchingPairs: true },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (existingCode) {
+    const concoursSection =
+      existingCode.exam.sections.find((section) => section.title.toLowerCase() === "concours") ??
+      existingCode.exam.sections[0] ??
+      (await db.examSection.create({
+        data: {
+          examId: existingCode.exam.id,
+          title: "Concours",
+          description: "Questions et defis",
+          position: 0,
+        },
+        include: {
+          questions: {
+            orderBy: { position: "asc" },
+            include: { choiceOptions: true, matchingPairs: true },
+          },
+        },
+      }));
+
+    if (concoursSection.title !== "Concours") {
+      await db.examSection.update({
+        where: { id: concoursSection.id },
+        data: { title: "Concours", description: "Questions et defis", position: 0 },
+      });
+    }
+
+    for (const [index, question] of concoursThreeQuestions.entries()) {
+      const existingQuestion = concoursSection.questions[index];
+      if (existingQuestion) {
+        await db.question.update({
+          where: { id: existingQuestion.id },
+          data: {
+            type: "SHORT_ANSWER",
+            prompt: question.prompt,
+            points: question.points,
+            position: index,
+            answerKey: Prisma.JsonNull,
+            config: Prisma.JsonNull,
+          },
+        });
+      } else {
+        await db.question.create({
+          data: {
+            sectionId: concoursSection.id,
+            type: "SHORT_ANSWER",
+            prompt: question.prompt,
+            points: question.points,
+            position: index,
+            answerKey: Prisma.JsonNull,
+            config: Prisma.JsonNull,
+          },
+        });
+      }
+    }
+
+    return db.examAccessCode.findUnique({
+      where: { code: CONCOURS3_ACCESS_CODE },
+      include: {
+        exam: {
+          include: {
+            sections: {
+              orderBy: { position: "asc" },
+              include: {
+                questions: {
+                  orderBy: { position: "asc" },
+                  include: { choiceOptions: true, matchingPairs: true },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  const exam = await db.exam.create({
+    data: {
+      title: "Concours 3 - ODD",
+      description: "Parcours ODD avec analyse systemique et defis visuels.",
+      status: "PUBLISHED",
+      durationMinutes: 120,
+      availableFrom: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+      allowResultReview: false,
+      allowPastSubmissions: false,
+      instructions: "Repondez a toutes les questions puis soumettez pour evaluation.",
+      createdById: currentUserId,
+      sections: {
+        create: [
+          {
+            title: "Concours",
+            description: "Questions et defis",
+            position: 0,
+            questions: {
+              create: concoursThreeQuestions.map((question, index) => ({
+                type: "SHORT_ANSWER" as const,
+                prompt: question.prompt,
+                points: question.points,
+                position: index,
+                answerKey: Prisma.JsonNull,
+                config: Prisma.JsonNull,
+              })),
+            },
+          },
+        ],
+      },
+    },
+  });
+
+  await db.examAccessCode.create({
+    data: {
+      examId: exam.id,
+      code: CONCOURS3_ACCESS_CODE,
+      generatedById: currentUserId,
+      isActive: true,
+    },
+  });
+
+  return db.examAccessCode.findUnique({
+    where: { code: CONCOURS3_ACCESS_CODE },
+    include: {
+      exam: {
+        include: {
+          sections: {
+            orderBy: { position: "asc" },
+            include: {
+              questions: {
+                orderBy: { position: "asc" },
+                include: { choiceOptions: true, matchingPairs: true },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
 }
 
 export async function redeemExamCodeAction(_: ActionState, formData: FormData): Promise<ActionState> {
@@ -30,7 +212,9 @@ export async function redeemExamCodeAction(_: ActionState, formData: FormData): 
     return { success: false, message: "Enter a valid exam code." };
   }
 
-  const accessCode = await db.examAccessCode.findUnique({
+  const normalizedCode = parsed.data.code.toUpperCase();
+
+  let accessCode = await db.examAccessCode.findUnique({
     where: { code: parsed.data.code.toUpperCase() },
     include: {
       exam: {
@@ -48,6 +232,10 @@ export async function redeemExamCodeAction(_: ActionState, formData: FormData): 
       },
     },
   });
+
+  if (!accessCode && normalizedCode === CONCOURS3_ACCESS_CODE) {
+    accessCode = await ensureConcoursThreeAccessCode(session.user.id);
+  }
 
   if (!accessCode || !accessCode.isActive || accessCode.exam.status !== "PUBLISHED") {
     return { success: false, message: "This access code is not available." };
@@ -105,6 +293,7 @@ export async function submitSessionAction(
 
   const examSession = await db.examSession.findFirst({
     where: { id: sessionId, participantId },
+    include: { accessCode: true },
   });
 
   if (!examSession) throw new Error("Exam session not found");
@@ -123,6 +312,80 @@ export async function submitSessionAction(
       : answers;
 
   const snapshot = examSession.examSnapshot as unknown as Parameters<typeof gradeSubmission>[0];
+
+  if (examSession.accessCode.code === CONCOURS3_ACCESS_CODE) {
+    const hasExpiredManual = Boolean(examSession.expiresAt && examSession.expiresAt <= new Date());
+    const shouldExpireManual = autoSubmitted || hasExpiredManual;
+    const finalManualAnswers =
+      shouldExpireManual && !autoSubmitted
+        ? (((examSession.draftAnswers as DraftAnswers | null) ?? {}) as DraftAnswers)
+        : answers;
+
+    const flatQuestions = snapshot.sections.flatMap((section) => section.questions);
+    const maxScore = flatQuestions.reduce((sum, question) => sum + question.points, 0);
+
+    await db.$transaction(async (tx) => {
+      await tx.examSession.update({
+        where: { id: sessionId },
+        data: {
+          status: shouldExpireManual ? SessionStatus.EXPIRED : SessionStatus.SUBMITTED,
+          submittedAt: new Date(),
+          autoSubmittedAt: shouldExpireManual ? new Date() : undefined,
+          draftAnswers: toJson(finalManualAnswers),
+        },
+      });
+
+      const submission = await tx.submission.upsert({
+        where: { sessionId },
+        create: {
+          sessionId,
+          participantId,
+          status: SubmissionStatus.NEEDS_REVIEW,
+          score: 0,
+          maxScore,
+          percentage: 0,
+          submittedAt: new Date(),
+          correctionsVisible: false,
+          answersSnapshot: toJson(finalManualAnswers),
+          sectionBreakdown: Prisma.JsonNull,
+        },
+        update: {
+          status: SubmissionStatus.NEEDS_REVIEW,
+          score: 0,
+          maxScore,
+          percentage: 0,
+          submittedAt: new Date(),
+          answersSnapshot: toJson(finalManualAnswers),
+          correctionsVisible: false,
+        },
+      });
+
+      await tx.submissionAnswer.deleteMany({ where: { submissionId: submission.id } });
+      await tx.submissionAnswer.createMany({
+        data: flatQuestions.map((question) => {
+          const response = finalManualAnswers[question.id] ?? null;
+          return {
+            submissionId: submission.id,
+            questionId: question.id,
+            response: response === null ? Prisma.JsonNull : toJson(response),
+            autoScore: 0,
+            finalScore: 0,
+            maxScore: question.points,
+            isCorrect: null,
+            feedback: null,
+            requiresManualReview: true,
+          };
+        }),
+      });
+    });
+
+    revalidatePath("/participant");
+    revalidatePath(`/participant/results/${sessionId}`);
+    revalidatePath("/admin/participants");
+
+    return { status: shouldExpireManual ? "expired" : "submitted" };
+  }
+
   const grading = gradeSubmission(snapshot, finalAnswers);
 
   await db.$transaction(async (tx) => {
