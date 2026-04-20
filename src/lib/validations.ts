@@ -24,13 +24,6 @@ export const redeemCodeSchema = z.object({
   code: z.string().min(4).max(32),
 });
 
-export const learningSummarySchema = z.object({
-  title: z.string().min(3),
-  content: z.string().min(10),
-  videoUrl: z.union([z.string().url(), z.literal("")]).optional(),
-  examId: z.string().optional(),
-});
-
 export const chatMessageSchema = z.object({
   conversationId: z.string().min(1),
   body: z.string().min(1).max(1000),

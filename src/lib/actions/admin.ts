@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { buildExamSnapshot } from "@/lib/exam";
 import { requireRole } from "@/lib/auth/session";
-import { examBuilderSchema, learningSummarySchema } from "@/lib/validations";
+import { examBuilderSchema } from "@/lib/validations";
 import { randomCode } from "@/lib/utils";
 
 type ActionState = { success: boolean; message: string; redirectTo?: string };
@@ -219,34 +219,6 @@ export async function startExamNowAction(examId: string) {
 
   await logAdminAction(session.user.id, "exam.started", "Exam", examId);
   revalidatePath(`/admin/exams/${examId}`);
-}
-
-export async function saveLearningSummaryAction(_: ActionState, formData: FormData): Promise<ActionState> {
-  const session = await requireRole(Role.ADMIN);
-  const parsed = learningSummarySchema.safeParse({
-    title: formData.get("title"),
-    content: formData.get("content"),
-    videoUrl: formData.get("videoUrl"),
-    examId: formData.get("examId") || undefined,
-  });
-
-  if (!parsed.success) {
-    return { success: false, message: "Learning summary is incomplete." };
-  }
-
-  const summary = await db.learningSummary.create({
-    data: {
-      title: parsed.data.title,
-      content: parsed.data.content,
-      videoUrl: parsed.data.videoUrl || undefined,
-      examId: parsed.data.examId || undefined,
-    },
-  });
-
-  await logAdminAction(session.user.id, "summary.created", "LearningSummary", summary.id);
-  revalidatePath("/admin/learning");
-  revalidatePath("/participant/learning");
-  return { success: true, message: "Summary published." };
 }
 
 export async function reviewShortAnswerAction(answerId: string, score: number, feedback: string) {

@@ -285,6 +285,7 @@ export async function submitSessionAction(
   sessionId: string,
   answers: DraftAnswers,
   autoSubmitted = false,
+  shouldRevalidate = true,
 ): Promise<SubmitSessionResult> {
   const session = await requireRole(Role.PARTICIPANT);
   const participantId = session.user.participantProfileId;
@@ -379,9 +380,11 @@ export async function submitSessionAction(
       });
     });
 
-    revalidatePath("/participant");
-    revalidatePath(`/participant/results/${sessionId}`);
-    revalidatePath("/admin/participants");
+    if (shouldRevalidate) {
+      revalidatePath("/participant");
+      revalidatePath(`/participant/results/${sessionId}`);
+      revalidatePath("/admin/participants");
+    }
 
     return { status: shouldExpireManual ? "expired" : "submitted" };
   }
@@ -444,9 +447,11 @@ export async function submitSessionAction(
     });
   });
 
-  revalidatePath("/participant");
-  revalidatePath(`/participant/results/${sessionId}`);
-  revalidatePath("/admin/participants");
+  if (shouldRevalidate) {
+    revalidatePath("/participant");
+    revalidatePath(`/participant/results/${sessionId}`);
+    revalidatePath("/admin/participants");
+  }
 
   return { status: shouldExpireSession ? "expired" : "submitted" };
 }

@@ -25,6 +25,7 @@ export default async function SessionPage({ params }: { params: Promise<{ sessio
       examSession.id,
       ((examSession.draftAnswers as Record<string, unknown> | null) ?? {}) as Record<string, unknown>,
       true,
+      false,
     );
     redirect(`/participant/results/${examSession.id}`);
   }

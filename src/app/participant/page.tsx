@@ -23,11 +23,6 @@ export default async function ParticipantDashboardPage() {
             }
           : null,
       }))}
-      summaries={dashboard.summaries.map((summary) => ({
-        id: summary.id,
-        title: summary.title,
-        videoUrl: summary.videoUrl,
-      }))}
     />
   );
 }

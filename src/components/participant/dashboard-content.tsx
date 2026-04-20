@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { PageHeader } from "@/components/shared/page-header";
 import { Card } from "@/components/ui/card";
-import { ButtonLink } from "@/components/shared/button-link";
 import { formatDate, formatScore } from "@/lib/utils";
 import { useParticipantLanguage } from "@/components/participant/participant-language";
 
@@ -16,14 +15,9 @@ type DashboardContentProps = {
     exam: { title: string };
     submission: { score: number; maxScore: number; percentage: number } | null;
   }>;
-  summaries: Array<{
-    id: string;
-    title: string;
-    videoUrl: string | null;
-  }>;
 };
 
-export function ParticipantDashboardContent({ name, sessions, summaries }: DashboardContentProps) {
+export function ParticipantDashboardContent({ name, sessions }: DashboardContentProps) {
   const { dictionary } = useParticipantLanguage();
 
   return (
@@ -31,9 +25,8 @@ export function ParticipantDashboardContent({ name, sessions, summaries }: Dashb
       <PageHeader
         title={dictionary.dashboardTitle(name)}
         description={dictionary.dashboardDescription}
-        action={<ButtonLink href="/participant/enter-code">{dictionary.enterExamCode}</ButtonLink>}
       />
-      <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+      <div className="grid gap-6">
         <Card className="space-y-4">
           <h2 className="font-display text-2xl text-slate-900">{dictionary.recentSessions}</h2>
           {sessions.map((item) => (
@@ -46,17 +39,6 @@ export function ParticipantDashboardContent({ name, sessions, summaries }: Dashb
                 </p>
               ) : null}
             </Link>
-          ))}
-        </Card>
-        <Card className="space-y-4">
-          <h2 className="font-display text-2xl text-slate-900">{dictionary.learningPicks}</h2>
-          {summaries.map((summary) => (
-            <div key={summary.id} className="rounded-3xl bg-[var(--panel-soft)] p-4">
-              <p className="font-semibold text-slate-900">{summary.title}</p>
-              <p className="text-sm text-slate-500">
-                {summary.videoUrl ? dictionary.includesVideo : dictionary.textSummary}
-              </p>
-            </div>
           ))}
         </Card>
       </div>

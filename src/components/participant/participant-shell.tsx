@@ -17,10 +17,7 @@ function ParticipantShellInner({ children }: { children: React.ReactNode }) {
 
   const nav = [
     { href: "/participant", label: dictionary.navDashboard, icon: "dashboard" as const },
-    { href: "/participant/tutorial", label: dictionary.navTutorial, icon: "learning" as const },
     { href: "/participant/enter-code", label: dictionary.navEnterCode, icon: "exams" as const },
-    { href: "/participant/learning", label: dictionary.navLearning, icon: "results" as const },
-    { href: "/participant/chat", label: dictionary.navChat, icon: "chat" as const },
   ];
 
   return (

@@ -23,7 +23,6 @@ export function ExamRunner({ sessionId, snapshot, initialAnswers, expiresAt, sta
   const { dictionary } = useParticipantLanguage();
   const [answers, setAnswers] = useState<DraftAnswers>(initialAnswers);
   const [submitting, setSubmitting] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(snapshot.durationMinutes * 60);
 
   const submitNow = useCallback(async (autoSubmitted = false) => {
     if (submitting) return;
@@ -50,15 +49,11 @@ export function ExamRunner({ sessionId, snapshot, initialAnswers, expiresAt, sta
 
   useEffect(() => {
     const timer = window.setInterval(() => {
-      setTimeLeft((current) => {
-        const recalculated = Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000));
-        if (recalculated <= 1 || current <= 1) {
-          window.clearInterval(timer);
-          void submitNow(true);
-          return 0;
-        }
-        return recalculated;
-      });
+      const remaining = Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000));
+      if (remaining <= 1) {
+        window.clearInterval(timer);
+        void submitNow(true);
+      }
     }, 1000);
     return () => window.clearInterval(timer);
   }, [expiresAt, submitNow]);
@@ -90,16 +85,12 @@ export function ExamRunner({ sessionId, snapshot, initialAnswers, expiresAt, sta
 
   return (
     <div className="space-y-6">
-      <Card className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <Card className="flex flex-col gap-4">
         <div>
           <h1 className="font-display text-3xl text-slate-900">{snapshot.title}</h1>
           <p className="mt-2 text-sm leading-7 text-[var(--muted)]">
             {snapshot.instructions ?? dictionary.examInstructions}
           </p>
-        </div>
-        <div className="rounded-3xl bg-[var(--panel-soft)] px-5 py-3 text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand)]">{dictionary.timeLeft}</p>
-          <p className="font-display text-3xl text-slate-900">{formatTime(timeLeft)}</p>
         </div>
       </Card>
 
@@ -131,7 +122,7 @@ export function ExamRunner({ sessionId, snapshot, initialAnswers, expiresAt, sta
         </Card>
       ))}
 
-      <Button type="button" onClick={() => void submitNow(false)} disabled={submitting || timeLeft <= 0}>
+      <Button type="button" onClick={() => void submitNow(false)} disabled={submitting}>
         {submitting ? dictionary.submitting : dictionary.submitExam}
       </Button>
     </div>
@@ -221,12 +212,6 @@ function QuestionInput({
       onChange={(event) => onChange(event.target.value)}
     />
   );
-}
-
-function formatTime(totalSeconds: number) {
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
 function LabSimulationQuestion({
