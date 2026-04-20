@@ -7,14 +7,14 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (pathname.startsWith("/admin")) {
-    if (!token) return NextResponse.redirect(new URL("/login", request.url));
+    if (!token || !token.role) return NextResponse.redirect(new URL("/login", request.url));
     if (token.role !== "ADMIN") {
       return NextResponse.redirect(new URL("/participant", request.url));
     }
   }
 
   if (pathname.startsWith("/participant")) {
-    if (!token) return NextResponse.redirect(new URL("/login", request.url));
+    if (!token || !token.role) return NextResponse.redirect(new URL("/login", request.url));
     if (token.role !== "PARTICIPANT") {
       return NextResponse.redirect(new URL("/admin", request.url));
     }
