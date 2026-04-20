@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth/session";
 import { Role } from "@prisma/client";
 import { ParticipantDashboardContent } from "@/components/participant/dashboard-content";
