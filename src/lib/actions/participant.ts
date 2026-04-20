@@ -262,7 +262,10 @@ export async function redeemExamCodeAction(_: ActionState, formData: FormData): 
         examId: accessCode.examId,
         accessCodeId: accessCode.id,
         status: SessionStatus.NOT_STARTED,
-        expiresAt: minutesFromNow(accessCode.exam.durationMinutes),
+        expiresAt:
+          !accessCode.exam.availableFrom || accessCode.exam.availableFrom <= new Date()
+            ? minutesFromNow(accessCode.exam.durationMinutes)
+            : null,
         examSnapshot: toJson(snapshot),
         draftAnswers: {},
       },

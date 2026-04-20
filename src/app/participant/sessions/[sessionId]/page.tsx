@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { ConcoursThreeRunner } from "@/components/participant/concours-three-runner";
 import { submitSessionAction } from "@/lib/actions/participant";
 import { CONCOURS3_ACCESS_CODE } from "@/lib/constants";
+import { ButtonLink } from "@/components/shared/button-link";
 
 export default async function SessionPage({ params }: { params: Promise<{ sessionId: string }> }) {
   const { sessionId } = await params;
@@ -37,7 +38,12 @@ export default async function SessionPage({ params }: { params: Promise<{ sessio
     return (
       <Card className="space-y-3">
         <h1 className="font-display text-3xl text-slate-900">Concours en attente</h1>
-        <p className="text-sm text-slate-600">the exam wil be started soon</p>
+        <p className="text-sm text-slate-600">The exam will be started soon.</p>
+        <div className="pt-2">
+          <ButtonLink href={`/participant/sessions/${examSession.id}`} variant="secondary">
+            Refresh
+          </ButtonLink>
+        </div>
       </Card>
     );
   }

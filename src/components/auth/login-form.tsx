@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { signIn } from "next-auth/react";
+import { getSession, signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -39,8 +39,10 @@ export function LoginForm() {
       return;
     }
 
-    router.refresh();
-    router.push("/");
+    const session = await getSession();
+    const destination =
+      session?.user.role === "ADMIN" ? "/admin" : session?.user.role === "PARTICIPANT" ? "/participant" : "/";
+    router.replace(destination);
   }
 
   return (
