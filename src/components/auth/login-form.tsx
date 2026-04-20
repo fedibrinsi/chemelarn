@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { getSession, signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -12,7 +11,6 @@ import { loginSchema } from "@/lib/validations";
 import { toast } from "sonner";
 
 export function LoginForm() {
-  const router = useRouter();
   const [pending, setPending] = useState(false);
 
   async function handleSubmit(formData: FormData) {
@@ -30,6 +28,7 @@ export function LoginForm() {
     setPending(true);
     const response = await signIn("credentials", {
       ...parsed.data,
+      callbackUrl: "/",
       redirect: false,
     });
     setPending(false);
@@ -39,10 +38,12 @@ export function LoginForm() {
       return;
     }
 
-    const session = await getSession();
-    const destination =
-      session?.user.role === "ADMIN" ? "/admin" : session?.user.role === "PARTICIPANT" ? "/participant" : "/";
-    router.replace(destination);
+    if (response?.url) {
+      window.location.href = response.url;
+      return;
+    }
+
+    window.location.href = "/";
   }
 
   return (
