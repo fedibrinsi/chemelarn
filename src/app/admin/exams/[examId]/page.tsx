@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { generateExamCodeAction, startExamNowAction } from "@/lib/actions/admin";
+import { generateExamCodeAction, startExamNowAction, stopExamNowAction } from "@/lib/actions/admin";
 import { db } from "@/lib/db";
 import { PageHeader } from "@/components/shared/page-header";
 import { Card } from "@/components/ui/card";
@@ -84,6 +84,9 @@ export default async function ExamDetailPage({ params }: { params: Promise<{ exa
             </form>
             <form action={startExamNowAction.bind(null, exam.id)}>
               <Button type="submit" variant="secondary">Start exam now</Button>
+            </form>
+            <form action={stopExamNowAction.bind(null, exam.id)}>
+              <Button type="submit" variant="danger">Stop exam now</Button>
             </form>
           </div>
         }

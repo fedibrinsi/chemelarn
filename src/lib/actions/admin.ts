@@ -1,9 +1,9 @@
 "use server";
 
-import { Prisma, Role } from "@prisma/client";
+import { Prisma, Role, SessionStatus, SubmissionStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { buildExamSnapshot } from "@/lib/exam";
+import { buildExamSnapshot, gradeSubmission, type DraftAnswers } from "@/lib/exam";
 import { requireRole } from "@/lib/auth/session";
 import { examBuilderSchema } from "@/lib/validations";
 import { randomCode } from "@/lib/utils";
@@ -219,6 +219,98 @@ export async function startExamNowAction(examId: string) {
 
   await logAdminAction(session.user.id, "exam.started", "Exam", examId);
   revalidatePath(`/admin/exams/${examId}`);
+}
+
+export async function stopExamNowAction(examId: string) {
+  const session = await requireRole(Role.ADMIN);
+
+  const exam = await db.exam.findUnique({
+    where: { id: examId },
+    include: {
+      sessions: {
+        where: { status: { in: [SessionStatus.NOT_STARTED, SessionStatus.IN_PROGRESS] } },
+      },
+    },
+  });
+
+  if (!exam) return;
+
+  await db.exam.update({
+    where: { id: examId },
+    data: {
+      availableUntil: new Date(),
+    },
+  });
+
+  for (const examSession of exam.sessions) {
+    const snapshot = examSession.examSnapshot as unknown as Parameters<typeof gradeSubmission>[0] | null;
+    if (!snapshot) continue;
+
+    const draft = ((examSession.draftAnswers as DraftAnswers | null) ?? {}) as DraftAnswers;
+    const grading = gradeSubmission(snapshot, draft);
+
+    await db.$transaction(async (tx) => {
+      await tx.examSession.update({
+        where: { id: examSession.id },
+        data: {
+          status: SessionStatus.EXPIRED,
+          submittedAt: new Date(),
+          autoSubmittedAt: new Date(),
+          draftAnswers: toJson(draft),
+        },
+      });
+
+      const submission = await tx.submission.upsert({
+        where: { sessionId: examSession.id },
+        create: {
+          sessionId: examSession.id,
+          participantId: examSession.participantId,
+          status: grading.status as SubmissionStatus,
+          score: grading.totalScore,
+          maxScore: grading.maxScore,
+          percentage: grading.percentage,
+          autoGradedAt: new Date(),
+          gradedAt: grading.status === "GRADED" ? new Date() : undefined,
+          submittedAt: new Date(),
+          correctionsVisible: snapshot.allowResultReview,
+          answersSnapshot: toJson(draft),
+          sectionBreakdown: toJson(grading.sectionBreakdown),
+        },
+        update: {
+          status: grading.status as SubmissionStatus,
+          score: grading.totalScore,
+          maxScore: grading.maxScore,
+          percentage: grading.percentage,
+          autoGradedAt: new Date(),
+          gradedAt: grading.status === "GRADED" ? new Date() : undefined,
+          submittedAt: new Date(),
+          answersSnapshot: toJson(draft),
+          sectionBreakdown: toJson(grading.sectionBreakdown),
+        },
+      });
+
+      await tx.submissionAnswer.deleteMany({ where: { submissionId: submission.id } });
+      await tx.submissionAnswer.createMany({
+        data: grading.gradedAnswers.map((answer) => ({
+          submissionId: submission.id,
+          questionId: answer.questionId,
+          response: answer.response === null ? Prisma.JsonNull : toJson(answer.response),
+          autoScore: answer.autoScore,
+          finalScore: answer.finalScore,
+          maxScore: answer.maxScore,
+          isCorrect: answer.isCorrect,
+          feedback: answer.feedback,
+          requiresManualReview: answer.requiresManualReview,
+        })),
+      });
+    });
+  }
+
+  await logAdminAction(session.user.id, "exam.stopped", "Exam", examId);
+  revalidatePath("/admin/exams");
+  revalidatePath(`/admin/exams/${examId}`);
+  revalidatePath("/admin/participants");
+  revalidatePath("/participant");
 }
 
 export async function reviewShortAnswerAction(answerId: string, score: number, feedback: string) {

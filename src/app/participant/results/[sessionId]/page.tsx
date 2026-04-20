@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { Role } from "@prisma/client";
+import { Role, SessionStatus } from "@prisma/client";
 import { requireRole } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { ParticipantResultsContent } from "@/components/participant/results-content";
@@ -24,6 +24,7 @@ export default async function ResultsPage({ params }: { params: Promise<{ sessio
   return (
     <ParticipantResultsContent
       examTitle={result.exam.title}
+      examOver={result.status === SessionStatus.EXPIRED}
       reviewOnly={isConcours}
       submission={
         isConcours

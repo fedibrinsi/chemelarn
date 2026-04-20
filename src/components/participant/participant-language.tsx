@@ -23,6 +23,7 @@ type TranslationDictionary = {
   openExamSession: string;
   resultsTitle: string;
   resultsDescription: string;
+  examOverMessage: string;
   scoreLabel: string;
   noFeedback: string;
   notSubmitted: string;
@@ -60,6 +61,7 @@ const translations: Record<ParticipantLocale, TranslationDictionary> = {
     resultsTitle: "Results",
     resultsDescription:
       "Review your score, correction summary, and any answers that still need teacher feedback.",
+    examOverMessage: "This exam is over. Your answers were saved and submitted.",
     scoreLabel: "Score",
     noFeedback: "No feedback yet",
     notSubmitted: "Your exam has not been submitted yet.",
@@ -95,6 +97,7 @@ const translations: Record<ParticipantLocale, TranslationDictionary> = {
     resultsTitle: "Résultats",
     resultsDescription:
       "Consultez votre score, le résumé de correction et les réponses qui attendent encore un retour.",
+    examOverMessage: "Cet examen est terminé. Vos réponses ont été enregistrées et soumises.",
     scoreLabel: "Score",
     noFeedback: "Pas encore de commentaire",
     notSubmitted: "Votre examen n'a pas encore été soumis.",
@@ -128,6 +131,7 @@ const translations: Record<ParticipantLocale, TranslationDictionary> = {
     openExamSession: "فتح جلسة الامتحان",
     resultsTitle: "النتائج",
     resultsDescription: "راجع درجتك وملخص التصحيح وأي إجابات ما زالت تنتظر مراجعة المعلم.",
+    examOverMessage: "انتهى هذا الامتحان. تم حفظ إجاباتك وإرسالها.",
     scoreLabel: "الدرجة",
     noFeedback: "لا توجد ملاحظات بعد",
     notSubmitted: "لم يتم إرسال امتحانك بعد.",
