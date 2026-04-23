@@ -11,6 +11,7 @@ export default async function AdminExamsPage() {
     orderBy: { updatedAt: "desc" },
     include: { sections: true, sessions: true, accessCodes: true },
   });
+  const visibleExams = exams.filter((exam) => exam.title === "Concours 3 - ODD");
 
   return (
     <div className="space-y-6">
@@ -20,7 +21,7 @@ export default async function AdminExamsPage() {
         action={<ButtonLink href="/admin/exams/new">Create exam</ButtonLink>}
       />
       <Card className="space-y-4">
-        {exams.map((exam) => (
+        {visibleExams.map((exam) => (
           <Link key={exam.id} href={`/admin/exams/${exam.id}`} className="block rounded-3xl bg-[var(--panel-soft)] p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>

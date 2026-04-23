@@ -2,6 +2,7 @@ import { Role } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth/auth-options";
+import { db } from "@/lib/db";
 
 export async function getCurrentSession() {
   return getServerSession(authOptions);
@@ -20,6 +21,14 @@ export async function requireRole(role: Role) {
   }
   if (session.user.role !== role) {
     redirect(session.user.role === "ADMIN" ? "/admin" : "/participant");
+  }
+  if (session.user.role === "PARTICIPANT" && !session.user.participantProfileId) {
+    const profile = await db.participantProfile.upsert({
+      where: { userId: session.user.id },
+      update: {},
+      create: { userId: session.user.id, gradeLevel: "Not specified" },
+    });
+    session.user.participantProfileId = profile.id;
   }
   return session;
 }

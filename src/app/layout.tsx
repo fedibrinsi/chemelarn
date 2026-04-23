@@ -37,8 +37,8 @@ export default function RootLayout({
     <html lang="en" className="h-full antialiased">
       <body className="min-h-full bg-[var(--background)] text-[var(--foreground)]">
         <div className="flex min-h-full flex-col">
-          <main className="flex-1">{children}</main>
-          <footer className="border-t border-[var(--line)] bg-white/80 backdrop-blur">
+          <main className="flex-1 pb-28">{children}</main>
+          <footer className="fixed inset-x-0 bottom-0 z-50 border-t border-[var(--line)] bg-white/80 backdrop-blur">
             <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-center gap-6 px-6 py-6">
               {logos.map((logo) => (
                 <Image

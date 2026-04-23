@@ -185,12 +185,6 @@ const challengeTwoOptions: Option[] = [
   { key: "C", text: "Mettre seulement une affiche sauvez la planete" },
 ];
 
-const openingFrames = [
-  "Observer les liens entre les ODD",
-  "Comprendre les effets en chaine",
-  "Agir avec une vision systemique",
-] as const;
-
 const oddIcons = [
   { code: "ODD 3", title: "Bonne sante et bien-etre", icon: "HEALTH" },
   { code: "ODD 4", title: "Education de qualite", icon: "EDU" },
@@ -204,7 +198,12 @@ export function ConcoursThreeRunner({ sessionId, status, ids, initialAnswers }: 
   const router = useRouter();
   const [answers, setAnswers] = useState<Record<string, unknown>>(initialAnswers);
   const [submitting, setSubmitting] = useState(false);
-  const [frameIndex, setFrameIndex] = useState(0);
+  const [selectedLeft, setSelectedLeft] = useState<string | null>(null);
+  const [selectedRight, setSelectedRight] = useState<string | null>(null);
+  const [links, setLinks] = useState<Array<{ from: string; to: string }>>(() => {
+    const saved = initialAnswers[`${ids.challenge1}-links`];
+    return Array.isArray(saved) ? (saved as Array<{ from: string; to: string }>) : [];
+  });
 
   const readyQuestions = useMemo(() => {
     return ids.questions.map((id, index) => ({ id, ...qcm[index] })).filter((item) => Boolean(item.prompt));
@@ -226,14 +225,6 @@ export function ConcoursThreeRunner({ sessionId, status, ids, initialAnswers }: 
     return () => window.clearTimeout(timeout);
   }, [answers, router, sessionId, status]);
 
-  useEffect(() => {
-    const interval = window.setInterval(() => {
-      setFrameIndex((prev) => (prev + 1) % openingFrames.length);
-    }, 1800);
-
-    return () => window.clearInterval(interval);
-  }, []);
-
   async function submit() {
     if (submitting) return;
     setSubmitting(true);
@@ -252,6 +243,53 @@ export function ConcoursThreeRunner({ sessionId, status, ids, initialAnswers }: 
     router.push(`/participant/results/${sessionId}`);
   }
 
+  const leftOdd = oddIcons.slice(0, 3);
+  const rightOdd = oddIcons.slice(3);
+
+  function addLink(from: string, to: string) {
+    setLinks((prev) => {
+      const exists = prev.some((link) => link.from === from && link.to === to);
+      if (exists) return prev;
+      const next = [...prev, { from, to }];
+      setAnswers((current) => ({ ...current, [`${ids.challenge1}-links`]: next }));
+      return next;
+    });
+  }
+
+  function handleLeftPick(code: string) {
+    if (selectedLeft === code) {
+      setSelectedLeft(null);
+      return;
+    }
+    setSelectedLeft(code);
+    if (selectedRight) {
+      addLink(code, selectedRight);
+      setSelectedLeft(null);
+      setSelectedRight(null);
+    }
+  }
+
+  function handleRightPick(code: string) {
+    if (selectedRight === code) {
+      setSelectedRight(null);
+      return;
+    }
+    setSelectedRight(code);
+    if (selectedLeft) {
+      addLink(selectedLeft, code);
+      setSelectedLeft(null);
+      setSelectedRight(null);
+    }
+  }
+
+  function removeLink(index: number) {
+    setLinks((prev) => {
+      const next = prev.filter((_, i) => i !== index);
+      setAnswers((current) => ({ ...current, [`${ids.challenge1}-links`]: next }));
+      return next;
+    });
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -261,20 +299,89 @@ export function ConcoursThreeRunner({ sessionId, status, ids, initialAnswers }: 
 
       <Card className="space-y-4">
         <h2 className="font-display text-2xl text-slate-900">Animation d&apos;ouverture</h2>
-        <div className="opening-stage relative overflow-hidden rounded-2xl border border-[var(--line)] bg-slate-900/95 p-6 text-white">
-          <div className="orb orb-a" />
-          <div className="orb orb-b" />
-          <div className="orb orb-c" />
-          <div className="relative z-10 space-y-3">
-            <p className="text-xs uppercase tracking-[0.25em] text-cyan-200">Concours ODD</p>
-            <p className="max-w-xl text-lg font-semibold leading-7">{openingFrames[frameIndex]}</p>
-            <div className="flex flex-wrap gap-2 pt-2">
-              {oddIcons.map((item) => (
-                <span key={item.code} className="rounded-full border border-white/30 bg-white/10 px-3 py-1 text-xs">
-                  {item.code}
-                </span>
-              ))}
+        <div className="concours-stage relative overflow-hidden rounded-2xl border border-[var(--line)] bg-white p-5">
+          <div className="concours-step step-1">
+            <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Situation</p>
+            <h3 className="text-xl font-semibold text-slate-900">Le lycee fait face a 4 problemes</h3>
+            <div className="step-layout">
+              <ul className="problem-grid">
+                <li className="problem-card">Bouteilles jetables</li>
+                <li className="problem-card">Gaspillage d&apos;energie</li>
+                <li className="problem-card">Fuites d&apos;eau</li>
+                <li className="problem-card">Faible engagement des eleves</li>
+              </ul>
+              <div className="illustration-panel" aria-hidden="true">
+                <svg viewBox="0 0 220 180" role="presentation" className="illustration-svg">
+                  <rect x="8" y="12" width="204" height="156" rx="18" fill="#f8fafc" stroke="#e2e8f0" />
+                  <rect x="24" y="26" width="172" height="36" rx="12" fill="#e2e8f0" />
+                  <circle cx="44" cy="96" r="16" fill="#93c5fd" />
+                  <path d="M44 82 C38 92, 34 98, 44 112 C54 98, 50 92, 44 82" fill="#2563eb" />
+                  <rect x="80" y="82" width="20" height="36" rx="6" fill="#facc15" />
+                  <path d="M90 74 L96 86 L84 86 Z" fill="#ca8a04" />
+                  <rect x="122" y="78" width="28" height="44" rx="8" fill="#f97316" />
+                  <circle cx="136" cy="74" r="10" fill="#fb923c" />
+                  <rect x="160" y="84" width="32" height="32" rx="10" fill="#a3e635" />
+                  <circle cx="172" cy="96" r="6" fill="#4d7c0f" />
+                  <circle cx="186" cy="96" r="6" fill="#4d7c0f" />
+                </svg>
+                <p className="illustration-caption">Diagnostic rapide des problemes.</p>
+              </div>
             </div>
+          </div>
+
+          <div className="concours-step step-2">
+            <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Tableau d&apos;actions</p>
+            <h3 className="text-xl font-semibold text-slate-900">4 actions concretes</h3>
+            <div className="step-layout">
+              <div className="action-grid">
+                <div className="action-card">Installation de fontaines + gourdes</div>
+                <div className="action-card">Reparation des fuites</div>
+                <div className="action-card">Tri + compost</div>
+                <div className="action-card">Extinction intelligente / LED</div>
+              </div>
+              <div className="illustration-panel" aria-hidden="true">
+                <svg viewBox="0 0 220 180" role="presentation" className="illustration-svg">
+                  <rect x="8" y="12" width="204" height="156" rx="18" fill="#f1f5f9" stroke="#e2e8f0" />
+                  <rect x="26" y="30" width="168" height="32" rx="12" fill="#dbeafe" />
+                  <rect x="32" y="78" width="64" height="76" rx="12" fill="#bfdbfe" />
+                  <path d="M64 92 C56 104, 56 122, 64 134 C72 122, 72 104, 64 92" fill="#2563eb" />
+                  <rect x="110" y="78" width="80" height="28" rx="10" fill="#bbf7d0" />
+                  <rect x="110" y="114" width="80" height="40" rx="10" fill="#fde68a" />
+                </svg>
+                <p className="illustration-caption">Plan d&apos;actions coordonnees.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="concours-step step-3">
+            <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Effets</p>
+            <h3 className="text-xl font-semibold text-slate-900">Les impacts positifs</h3>
+            <div className="step-layout">
+              <div className="effects-grid">
+                <div className="effect-pill">Moins de dechets</div>
+                <div className="effect-pill">Moins d&apos;eau gaspillee</div>
+                <div className="effect-pill">Moins de depenses</div>
+                <div className="effect-pill">Plus de participation</div>
+              </div>
+              <div className="illustration-panel" aria-hidden="true">
+                <svg viewBox="0 0 220 180" role="presentation" className="illustration-svg">
+                  <rect x="8" y="12" width="204" height="156" rx="18" fill="#ecfccb" stroke="#d9f99d" />
+                  <circle cx="60" cy="94" r="22" fill="#22c55e" />
+                  <path d="M54 94 L60 100 L70 88" stroke="#f8fafc" strokeWidth="6" fill="none" strokeLinecap="round" />
+                  <rect x="100" y="70" width="90" height="18" rx="8" fill="#bbf7d0" />
+                  <rect x="100" y="98" width="70" height="18" rx="8" fill="#bbf7d0" />
+                  <rect x="100" y="126" width="80" height="18" rx="8" fill="#bbf7d0" />
+                </svg>
+                <p className="illustration-caption">Resultats visibles sur le campus.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="concours-step step-4">
+            <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Final</p>
+            <h3 className="text-xl font-semibold text-slate-900">La roue ODD apparait</h3>
+            <div className="odd-wheel" aria-hidden="true" />
+            <p className="mt-3 text-sm text-slate-600">Les actions convergent vers les ODD.</p>
           </div>
         </div>
         <p className="text-sm text-slate-700">Question flash: L&apos;idee principale de l&apos;animation est:</p>
@@ -331,18 +438,60 @@ export function ConcoursThreeRunner({ sessionId, status, ids, initialAnswers }: 
 
       <Card className="space-y-4">
         <h2 className="font-display text-2xl text-slate-900">Defi visuel 1</h2>
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-          {oddIcons.map((item) => (
-            <div key={item.code} className="rounded-2xl border border-[var(--line)] bg-[var(--panel-soft)] p-4">
-              <p className="inline-flex rounded-full border border-[var(--line)] bg-white px-2 py-1 text-[11px] font-semibold text-slate-700">
-                {item.icon}
-              </p>
-              <p className="mt-3 text-sm font-semibold text-slate-900">{item.code}</p>
-              <p className="text-xs text-slate-600">{item.title}</p>
-            </div>
-          ))}
+        <p className="text-sm text-slate-700">
+          Reliez au moins 4 liens logiques entre ODD 3, 4, 6, 12, 13, 17 et justifiez.
+        </p>
+        <div className="odd-linker">
+          <div className="odd-column">
+            <p className="column-title">Partie gauche</p>
+            {leftOdd.map((item) => (
+              <button
+                key={item.code}
+                type="button"
+                onClick={() => handleLeftPick(item.code)}
+                className={`odd-card ${selectedLeft === item.code ? "odd-card-active" : ""}`}
+              >
+                <span className="odd-badge">{item.icon}</span>
+                <span className="odd-code">{item.code}</span>
+                <span className="odd-title">{item.title}</span>
+              </button>
+            ))}
+          </div>
+          <div className="odd-column">
+            <p className="column-title">Partie droite</p>
+            {rightOdd.map((item) => (
+              <button
+                key={item.code}
+                type="button"
+                onClick={() => handleRightPick(item.code)}
+                className={`odd-card ${selectedRight === item.code ? "odd-card-active" : ""}`}
+              >
+                <span className="odd-badge">{item.icon}</span>
+                <span className="odd-code">{item.code}</span>
+                <span className="odd-title">{item.title}</span>
+              </button>
+            ))}
+          </div>
+          <div className="odd-links">
+            <p className="column-title">Liens valides</p>
+            {links.length === 0 ? (
+              <p className="empty-links">Cliquez un ODD a gauche puis un ODD a droite.</p>
+            ) : (
+              <ul className="links-list">
+                {links.map((link, index) => (
+                  <li key={`${link.from}-${link.to}-${index}`}>
+                    <span>{link.from}</span>
+                    <span className="link-arrow">→</span>
+                    <span>{link.to}</span>
+                    <button type="button" className="link-remove" onClick={() => removeLink(index)}>
+                      Retirer
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
-        <p className="text-sm text-slate-700">Reliez au moins 4 liens logiques entre ODD 3, 4, 6, 12, 13, 17 et justifiez.</p>
         <textarea
           className="min-h-36 w-full rounded-xl border border-[var(--line)] bg-white px-3 py-2 text-sm"
           placeholder="Ecrivez vos liens et justifications..."
@@ -390,71 +539,297 @@ export function ConcoursThreeRunner({ sessionId, status, ids, initialAnswers }: 
       </Button>
 
       <style jsx>{`
-        .opening-stage {
-          min-height: 220px;
+        .concours-stage {
+          min-height: 420px;
+          background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 50%, #fef9c3 100%);
         }
 
-        .orb {
+        .concours-step {
           position: absolute;
-          border-radius: 9999px;
-          filter: blur(4px);
-          opacity: 0.75;
+          inset: 20px;
+          opacity: 0;
+          transform: translateY(12px);
+          animation: stepShow 20s infinite;
         }
 
-        .orb-a {
-          width: 190px;
-          height: 190px;
-          left: -30px;
-          top: -40px;
-          background: radial-gradient(circle at 30% 30%, #67e8f9, #0f172a);
-          animation: driftA 4s ease-in-out infinite;
+        .step-1 {
+          animation-delay: 0s;
         }
 
-        .orb-b {
-          width: 170px;
-          height: 170px;
-          right: -20px;
-          top: 30px;
-          background: radial-gradient(circle at 40% 30%, #facc15, #0f172a);
-          animation: driftB 4.8s ease-in-out infinite;
+        .step-2 {
+          animation-delay: 5s;
         }
 
-        .orb-c {
+        .step-3 {
+          animation-delay: 10s;
+        }
+
+        .step-4 {
+          animation-delay: 15s;
+          text-align: center;
+        }
+
+        .problem-grid {
+          margin-top: 16px;
+          display: grid;
+          gap: 10px;
+          grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+          list-style: none;
+          padding: 0;
+        }
+
+        .step-layout {
+          margin-top: 14px;
+          display: grid;
+          gap: 18px;
+          align-items: center;
+          grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+        }
+
+        .problem-card {
+          border-radius: 16px;
+          border: 1px solid rgba(15, 23, 42, 0.1);
+          background: rgba(255, 255, 255, 0.9);
+          padding: 12px 14px;
+          font-size: 14px;
+        }
+
+        .illustration-panel {
+          border-radius: 18px;
+          border: 1px solid rgba(15, 23, 42, 0.08);
+          background: rgba(255, 255, 255, 0.7);
+          padding: 12px;
+          box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+          text-align: center;
+        }
+
+        .illustration-svg {
+          width: 100%;
+          height: auto;
+          max-height: 220px;
+          display: block;
+        }
+
+        .illustration-caption {
+          margin-top: 8px;
+          font-size: 12px;
+          color: #475569;
+        }
+
+        .action-grid {
+          margin-top: 16px;
+          display: grid;
+          gap: 12px;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        }
+
+        .action-card {
+          border-radius: 18px;
+          border: 1px solid rgba(59, 130, 246, 0.2);
+          background: rgba(239, 246, 255, 0.95);
+          padding: 14px 16px;
+          font-size: 14px;
+          font-weight: 600;
+          color: #1e3a8a;
+          box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.12);
+        }
+
+        .effects-grid {
+          margin-top: 18px;
+          display: flex;
+          flex-wrap: wrap;
+          gap: 12px;
+        }
+
+        .effect-pill {
+          border-radius: 999px;
+          background: rgba(34, 197, 94, 0.15);
+          color: #166534;
+          padding: 10px 16px;
+          font-size: 13px;
+          font-weight: 600;
+          border: 1px solid rgba(22, 101, 52, 0.2);
+        }
+
+        .odd-wheel {
+          margin: 18px auto 0;
           width: 160px;
           height: 160px;
-          left: 40%;
-          bottom: -70px;
-          background: radial-gradient(circle at 40% 40%, #4ade80, #0f172a);
-          animation: driftC 5.2s ease-in-out infinite;
+          border-radius: 999px;
+          background: conic-gradient(
+            #ef4444 0deg 36deg,
+            #f97316 36deg 72deg,
+            #eab308 72deg 108deg,
+            #22c55e 108deg 144deg,
+            #14b8a6 144deg 180deg,
+            #0ea5e9 180deg 216deg,
+            #3b82f6 216deg 252deg,
+            #6366f1 252deg 288deg,
+            #a855f7 288deg 324deg,
+            #ec4899 324deg 360deg
+          );
+          position: relative;
+          animation: wheelSpin 6s linear infinite;
+          box-shadow: 0 14px 30px rgba(15, 23, 42, 0.25);
         }
 
-        @keyframes driftA {
-          0%,
-          100% {
-            transform: translate(0, 0);
+        .odd-wheel::after {
+          content: "";
+          position: absolute;
+          inset: 24px;
+          border-radius: 999px;
+          background: #ffffff;
+          box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.08);
+        }
+
+        .odd-linker {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 16px;
+        }
+
+        .odd-column,
+        .odd-links {
+          border-radius: 16px;
+          border: 1px solid rgba(15, 23, 42, 0.08);
+          background: rgba(255, 255, 255, 0.85);
+          padding: 12px;
+          display: grid;
+          gap: 10px;
+        }
+
+        .column-title {
+          font-size: 12px;
+          text-transform: uppercase;
+          letter-spacing: 0.2em;
+          color: #64748b;
+        }
+
+        .odd-card {
+          display: grid;
+          gap: 6px;
+          text-align: left;
+          border-radius: 14px;
+          border: 1px solid rgba(226, 232, 240, 1);
+          background: #fef3e2;
+          padding: 12px;
+          transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .odd-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px rgba(15, 23, 42, 0.1);
+        }
+
+        .odd-card-active {
+          border-color: #2563eb;
+          box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+        }
+
+        .odd-badge {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 999px;
+          border: 1px solid rgba(226, 232, 240, 1);
+          background: #ffffff;
+          padding: 2px 10px;
+          font-size: 11px;
+          font-weight: 600;
+          color: #0f172a;
+          width: fit-content;
+        }
+
+        .odd-code {
+          font-size: 14px;
+          font-weight: 700;
+          color: #0f172a;
+        }
+
+        .odd-title {
+          font-size: 12px;
+          color: #475569;
+        }
+
+        .empty-links {
+          font-size: 13px;
+          color: #64748b;
+        }
+
+        .links-list {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+          display: grid;
+          gap: 8px;
+          font-size: 13px;
+          color: #0f172a;
+        }
+
+        .links-list li {
+          display: grid;
+          grid-template-columns: auto auto auto 1fr;
+          gap: 8px;
+          align-items: center;
+        }
+
+        .link-arrow {
+          color: #2563eb;
+        }
+
+        .link-remove {
+          justify-self: end;
+          border: none;
+          background: none;
+          color: #ef4444;
+          font-size: 12px;
+          font-weight: 600;
+          cursor: pointer;
+        }
+
+        @keyframes stepShow {
+          0% {
+            opacity: 0;
+            transform: translateY(12px);
           }
-          50% {
-            transform: translate(18px, 12px);
+          5% {
+            opacity: 1;
+            transform: translateY(0);
+          }
+          25% {
+            opacity: 1;
+            transform: translateY(0);
+          }
+          30% {
+            opacity: 0;
+            transform: translateY(-8px);
+          }
+          100% {
+            opacity: 0;
+            transform: translateY(-8px);
           }
         }
 
-        @keyframes driftB {
-          0%,
-          100% {
-            transform: translate(0, 0);
+        @keyframes wheelSpin {
+          0% {
+            transform: rotate(0deg);
           }
-          50% {
-            transform: translate(-12px, 16px);
+          100% {
+            transform: rotate(360deg);
           }
         }
 
-        @keyframes driftC {
-          0%,
-          100% {
-            transform: translate(0, 0);
+        @media (max-width: 768px) {
+          .step-layout {
+            grid-template-columns: 1fr;
           }
-          50% {
-            transform: translate(8px, -18px);
+
+          .concours-stage {
+            min-height: 520px;
+          }
+
+          .odd-linker {
+            grid-template-columns: 1fr;
           }
         }
       `}</style>

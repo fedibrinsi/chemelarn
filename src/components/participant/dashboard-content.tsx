@@ -19,6 +19,7 @@ type DashboardContentProps = {
 
 export function ParticipantDashboardContent({ name, sessions }: DashboardContentProps) {
   const { dictionary } = useParticipantLanguage();
+  const visibleSessions = sessions.filter((item) => item.exam.title === "Concours 3 - ODD");
 
   return (
     <div className="space-y-6">
@@ -29,7 +30,7 @@ export function ParticipantDashboardContent({ name, sessions }: DashboardContent
       <div className="grid gap-6">
         <Card className="space-y-4">
           <h2 className="font-display text-2xl text-slate-900">{dictionary.recentSessions}</h2>
-          {sessions.map((item) => (
+          {visibleSessions.map((item) => (
             <Link key={item.id} href={`/participant/results/${item.id}`} className="block rounded-3xl bg-[var(--panel-soft)] p-4">
               <p className="font-semibold text-slate-900">{item.exam.title}</p>
               <p className="text-sm text-slate-500">{item.status} • {formatDate(item.createdAt)}</p>

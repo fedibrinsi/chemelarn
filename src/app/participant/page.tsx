@@ -7,7 +7,7 @@ import { getParticipantDashboard } from "@/lib/data/dashboard";
 export default async function ParticipantDashboardPage() {
   const session = await requireRole(Role.PARTICIPANT);
   if (!session.user.participantProfileId) {
-    redirect("/login");
+    redirect("/participant/enter-code");
   }
   const dashboard = await getParticipantDashboard(session.user.participantProfileId!);
 
