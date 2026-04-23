@@ -254,6 +254,10 @@ export async function redeemExamCodeAction(_: ActionState, formData: FormData): 
     },
   });
 
+  const now = new Date();
+  const isConcours = accessCode.code === CONCOURS3_ACCESS_CODE;
+  const shouldHoldConcours = isConcours && (!accessCode.exam.availableFrom || accessCode.exam.availableFrom > now);
+
   const currentSession =
     existing ??
     (await db.examSession.create({
@@ -262,8 +266,9 @@ export async function redeemExamCodeAction(_: ActionState, formData: FormData): 
         examId: accessCode.examId,
         accessCodeId: accessCode.id,
         status: SessionStatus.NOT_STARTED,
-        expiresAt:
-          !accessCode.exam.availableFrom || accessCode.exam.availableFrom <= new Date()
+        expiresAt: shouldHoldConcours
+          ? null
+          : !accessCode.exam.availableFrom || accessCode.exam.availableFrom <= now
             ? minutesFromNow(accessCode.exam.durationMinutes)
             : null,
         examSnapshot: toJson(snapshot),

@@ -32,7 +32,9 @@ export default async function SessionPage({ params }: { params: Promise<{ sessio
   }
 
   const isConcours = examSession.accessCode.code === CONCOURS3_ACCESS_CODE;
-  const waitingForStart = Boolean(examSession.exam.availableFrom && examSession.exam.availableFrom > new Date());
+  const waitingForStart = isConcours
+    ? !examSession.exam.availableFrom || examSession.exam.availableFrom > new Date()
+    : Boolean(examSession.exam.availableFrom && examSession.exam.availableFrom > new Date());
 
   if (waitingForStart) {
     return (

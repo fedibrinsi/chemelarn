@@ -204,10 +204,30 @@ export function ConcoursThreeRunner({ sessionId, status, ids, initialAnswers }: 
     const saved = initialAnswers[`${ids.challenge1}-links`];
     return Array.isArray(saved) ? (saved as Array<{ from: string; to: string }>) : [];
   });
+  const storageKey = `chemlearn:concours3:answers:${sessionId}`;
 
   const readyQuestions = useMemo(() => {
     return ids.questions.map((id, index) => ({ id, ...qcm[index] })).filter((item) => Boolean(item.prompt));
   }, [ids.questions]);
+
+  useEffect(() => {
+    const cached = window.localStorage.getItem(storageKey);
+    if (!cached) return;
+    try {
+      const parsed = JSON.parse(cached) as Record<string, unknown>;
+      setAnswers((prev) => ({ ...parsed, ...prev }));
+      const cachedLinks = parsed[`${ids.challenge1}-links`];
+      if (Array.isArray(cachedLinks)) {
+        setLinks(cachedLinks as Array<{ from: string; to: string }>);
+      }
+    } catch (error) {
+      console.error("Failed to restore local answers", error);
+    }
+  }, [ids.challenge1, storageKey]);
+
+  useEffect(() => {
+    window.localStorage.setItem(storageKey, JSON.stringify(answers));
+  }, [answers, storageKey]);
 
   useEffect(() => {
     const timeout = window.setTimeout(async () => {
