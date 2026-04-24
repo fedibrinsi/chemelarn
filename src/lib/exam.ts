@@ -120,6 +120,11 @@ function normalizeFillBlankResponse(response: Prisma.JsonValue) {
   return [response];
 }
 
+function normalizeShortAnswerResponse(response: Prisma.JsonValue) {
+  if (Array.isArray(response)) return response[0] ?? "";
+  return response ?? "";
+}
+
 export function gradeSubmission(snapshot: ExamSnapshot, draftAnswers: DraftAnswers) {
   const gradedAnswers: GradedAnswer[] = [];
   const sectionBreakdown: Array<{ sectionId: string; title: string; score: number; maxScore: number }> = [];
@@ -185,10 +190,20 @@ export function gradeSubmission(snapshot: ExamSnapshot, draftAnswers: DraftAnswe
           break;
         }
         case "SHORT_ANSWER": {
-          requiresManualReview = true;
-          isCorrect = null;
-          autoScore = 0;
-          feedback = "Awaiting teacher review.";
+          if (question.answerKey !== null && question.answerKey !== undefined) {
+            const expectedList = Array.isArray(question.answerKey) ? question.answerKey : [question.answerKey];
+            const normalizedExpected = expectedList.map((value) => normalizeString(value, question.isCaseSensitive));
+            const actual = normalizeString(normalizeShortAnswerResponse(response), question.isCaseSensitive);
+            isCorrect = normalizedExpected.includes(actual);
+            autoScore = isCorrect ? maxScore : 0;
+            requiresManualReview = false;
+            feedback = isCorrect ? "Correct answer." : "Answer does not match.";
+          } else {
+            requiresManualReview = true;
+            isCorrect = null;
+            autoScore = 0;
+            feedback = "Awaiting teacher review.";
+          }
           break;
         }
         case "LAB_SIMULATION": {
