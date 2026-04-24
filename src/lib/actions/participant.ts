@@ -18,7 +18,13 @@ function toJson(value: unknown): Prisma.InputJsonValue {
   return JSON.parse(JSON.stringify(value));
 }
 
-const concoursThreeQuestions = [
+type ConcoursQuestion = {
+  prompt: string;
+  points: number;
+  answerKey?: string;
+};
+
+const concoursThreeQuestions: ConcoursQuestion[] = [
   { prompt: "Question flash: L'idee principale de l'animation", points: 1, answerKey: "B" },
   { prompt: "Q1. Les ODD doivent etre compris comme:", points: 3, answerKey: "B" },
   { prompt: "Q2. Les ODD couvrent principalement:", points: 3, answerKey: "B" },
