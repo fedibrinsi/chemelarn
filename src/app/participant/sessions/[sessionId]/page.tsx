@@ -54,7 +54,7 @@ export default async function SessionPage({ params }: { params: Promise<{ sessio
     };
     const flatQuestionIds = snapshot.sections.flatMap((section) => section.questions.map((question) => question.id));
 
-    if (flatQuestionIds.length < 21) {
+    if (flatQuestionIds.length < 44) {
       notFound();
     }
 
@@ -65,9 +65,10 @@ export default async function SessionPage({ params }: { params: Promise<{ sessio
         initialAnswers={(examSession.draftAnswers as Record<string, unknown>) ?? {}}
         ids={{
           flash: flatQuestionIds[0],
-          questions: flatQuestionIds.slice(1, 19),
-          challenge1: flatQuestionIds[19],
-          challenge2: flatQuestionIds[20],
+          questions: flatQuestionIds.slice(1, 41),
+          challenge1: flatQuestionIds[41],
+          challenge2: flatQuestionIds[42],
+          openQuestion: flatQuestionIds[43],
         }}
       />
     );

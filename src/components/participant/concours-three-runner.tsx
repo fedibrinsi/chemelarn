@@ -18,6 +18,7 @@ type ConcoursThreeRunnerProps = {
     questions: string[];
     challenge1: string;
     challenge2: string;
+    openQuestion: string;
   };
   initialAnswers: Record<string, unknown>;
 };
@@ -172,6 +173,182 @@ const qcm: Array<{ prompt: string; options: Option[] }> = [
       { key: "A", text: "Elle reste accessible a tous les eleves" },
       { key: "B", text: "Elle exclut les eleves qui ont moins de moyens" },
       { key: "C", text: "Elle augmente les inegalites" },
+    ],
+  },
+  {
+    prompt: "Q19. Une approche systemique des ODD consiste a:",
+    options: [
+      { key: "A", text: "Traiter chaque probleme isole" },
+      { key: "B", text: "Identifier les relations entre causes, effets, acteurs et solutions" },
+      { key: "C", text: "Choisir un seul ODD et ignorer les autres" },
+    ],
+  },
+  {
+    prompt: "Q20. Une action locale pertinente pour les ODD est dite levier lorsqu'elle:",
+    options: [
+      { key: "A", text: "Produit un effet positif sur plusieurs objectifs a la fois" },
+      { key: "B", text: "N'agit que sur un seul indicateur visuel" },
+      { key: "C", text: "Remplace totalement les politiques publiques" },
+    ],
+  },
+  {
+    prompt: "Q21. Lequel des projets suivants illustre le mieux une tension entre plusieurs objectifs qu'il faut arbitrer ?",
+    options: [
+      { key: "A", text: "Construire rapidement sans etude d'impact" },
+      { key: "B", text: "Developper une activite economique tout en limitant pollution et inegalites" },
+      { key: "C", text: "Fermer tous les clubs scolaires" },
+    ],
+  },
+  {
+    prompt: "Q22. Un bon indicateur de suivi d'un projet ODD doit etre:",
+    options: [
+      { key: "A", text: "Mesurable, pertinent et comparable dans le temps" },
+      { key: "B", text: "Decoratif seulement" },
+      { key: "C", text: "Changeant chaque semaine sans raison" },
+    ],
+  },
+  {
+    prompt: "Q23. Pourquoi l'ODD 17 (partenariats) est-il transversal ?",
+    options: [
+      { key: "A", text: "Parce qu'il ne sert qu'aux relations internationales" },
+      { key: "B", text: "Parce qu'il aide a mettre en oeuvre les autres objectifs" },
+      { key: "C", text: "Parce qu'il remplace tous les autres ODD" },
+    ],
+  },
+  {
+    prompt: "Q24. Un etablissement reduit de moitie l'usage des bouteilles jetables. Quel ensemble d'effets est le plus plausible ?",
+    options: [
+      { key: "A", text: "Moins de dechets, moins de couts, meilleure sensibilisation" },
+      { key: "B", text: "Plus de dechets et plus de gaspillage" },
+      { key: "C", text: "Aucun effet educatif possible" },
+    ],
+  },
+  {
+    prompt: "Q25. Dans une logique ODD, une solution durable doit eviter:",
+    options: [
+      { key: "A", text: "Les effets rebond et les impacts deplaces" },
+      { key: "B", text: "L'analyse des consequences" },
+      { key: "C", text: "La participation des usagers" },
+    ],
+  },
+  {
+    prompt: "Q26. Le greenwashing dans un projet scolaire correspond plutot a:",
+    options: [
+      { key: "A", text: "Une communication ecologique sans changements reels verifiables" },
+      { key: "B", text: "Une action mesuree avec resultats" },
+      { key: "C", text: "Un partenariat actif avec suivi" },
+    ],
+  },
+  {
+    prompt: "Q27. Le meilleur exemple d'interconnexion entre ODD est:",
+    options: [
+      { key: "A", text: "L'acces a l'eau ameliore la sante, la frequentation scolaire et la resilience locale" },
+      { key: "B", text: "Chaque ODD fonctionne sans lien avec les autres" },
+      { key: "C", text: "Les ODD ne concernent que les Etats" },
+    ],
+  },
+  {
+    prompt: "Q28. Dans un projet ODD au lycee, l'etape de diagnostic sert surtout a:",
+    options: [
+      { key: "A", text: "Comprendre le probleme avant d'agir" },
+      { key: "B", text: "Perdre du temps" },
+      { key: "C", text: "Remplacer l'action concrete" },
+    ],
+  },
+  {
+    prompt: "Q29. La participation des eleves est importante parce que:",
+    options: [
+      { key: "A", text: "Elle ameliore l'appropriation, la creativite et la durabilite des actions" },
+      { key: "B", text: "Elle complique forcement tout projet" },
+      { key: "C", text: "Elle n'a aucun effet sur les resultats" },
+    ],
+  },
+  {
+    prompt: "Q30. Une politique d'achat responsable dans un etablissement agit principalement sur:",
+    options: [
+      { key: "A", text: "L'ODD 12, avec effets possibles sur d'autres ODD" },
+      { key: "B", text: "Aucun ODD" },
+      { key: "C", text: "Seulement l'apparence du lycee" },
+    ],
+  },
+  {
+    prompt: "Q31. Lequel de ces couples action / risque est le plus juste ?",
+    options: [
+      { key: "A", text: "Installer des climatiseurs partout / hausse possible de la consommation energetique" },
+      { key: "B", text: "Reparer les fuites d'eau / augmentation directe des dechets plastiques" },
+      { key: "C", text: "Developper le tri / disparition immediate de tous les problemes" },
+    ],
+  },
+  {
+    prompt: "Q32. Une demarche coherente avec les ODD cherche a:",
+    options: [
+      { key: "A", text: "Maximiser les co-benefices et limiter les effets negatifs" },
+      { key: "B", text: "Agir vite sans evaluation" },
+      { key: "C", text: "Choisir les actions les plus visibles seulement" },
+    ],
+  },
+  {
+    prompt: "Q33. Quel exemple correspond le mieux a la justice sociale dans un projet environnemental ?",
+    options: [
+      { key: "A", text: "Reserver les benefices a quelques eleves" },
+      { key: "B", text: "Concevoir des actions accessibles a tous" },
+      { key: "C", text: "Exclure les eleves les plus eloignes de l'engagement" },
+    ],
+  },
+  {
+    prompt: "Q34. Pourquoi les ODD sont-ils utiles dans un etablissement scolaire ?",
+    options: [
+      { key: "A", text: "Ils donnent un cadre commun pour analyser, prioriser et agir" },
+      { key: "B", text: "Ils servent uniquement a faire des affiches" },
+      { key: "C", text: "Ils empechent les projets locaux" },
+    ],
+  },
+  {
+    prompt: "Q35. Une donnee brute devient vraiment utile dans un projet ODD quand:",
+    options: [
+      { key: "A", text: "Elle est interpretee dans son contexte" },
+      { key: "B", text: "Elle est affichee sans explication" },
+      { key: "C", text: "Elle est choisie au hasard" },
+    ],
+  },
+  {
+    prompt: "Q36. Quelle situation illustre le mieux une gouvernance participative ?",
+    options: [
+      { key: "A", text: "Le projet est decide, mis en oeuvre et evalue avec plusieurs acteurs" },
+      { key: "B", text: "Une seule personne decide sans concertation" },
+      { key: "C", text: "Les usagers decouvrent le projet a la fin" },
+    ],
+  },
+  {
+    prompt: "Q37. Lequel de ces objectifs de projet est le mieux formule ?",
+    options: [
+      { key: "A", text: "Rendre le lycee meilleur" },
+      { key: "B", text: "Reduire de 30 % les bouteilles jetables en 6 mois" },
+      { key: "C", text: "Faire quelque chose pour la planete" },
+    ],
+  },
+  {
+    prompt: "Q38. Dans une logique de developpement durable, une solution est robuste si:",
+    options: [
+      { key: "A", text: "Elle reste pertinente malgre les changements de contexte" },
+      { key: "B", text: "Elle depend d'une seule personne" },
+      { key: "C", text: "Elle fonctionne seulement un jour d'evenement" },
+    ],
+  },
+  {
+    prompt: "Q39. Pourquoi faut-il faire une evaluation finale apres un projet ODD ?",
+    options: [
+      { key: "A", text: "Pour mesurer les resultats, corriger les limites et preparer la suite" },
+      { key: "B", text: "Seulement pour attribuer une note" },
+      { key: "C", text: "Parce que c'est obligatoire dans tous les cas" },
+    ],
+  },
+  {
+    prompt: "Q40. Quel enonce resume le mieux l'esprit des ODD au lycee ?",
+    options: [
+      { key: "A", text: "Comprendre les liens, agir localement, mesurer l'impact" },
+      { key: "B", text: "Memoriser les logos, puis oublier" },
+      { key: "C", text: "Choisir un seul probleme sans regarder le reste" },
     ],
   },
 ];
@@ -532,6 +709,21 @@ export function ConcoursThreeRunner({ sessionId, status, ids, initialAnswers }: 
             </button>
           ))}
         </div>
+      </Card>
+
+      <Card className="space-y-4">
+        <h2 className="font-display text-2xl text-slate-900">Q41. Question ouverte</h2>
+        <p className="text-sm text-slate-700">
+          Votre lycee constate 4 problemes (bouteilles plastiques jetables, gaspillage d'electricite, faible tri, faible
+          participation). Proposez un mini-plan d'action avec 2 objectifs, 3 actions, les acteurs impliques, 2 indicateurs
+          de suivi et un lien avec au moins 3 ODD.
+        </p>
+        <textarea
+          className="min-h-48 w-full rounded-xl border border-[var(--line)] bg-white px-3 py-2 text-sm"
+          placeholder="Ecrivez votre mini-plan d'action..."
+          value={typeof answers[ids.openQuestion] === "string" ? String(answers[ids.openQuestion]) : ""}
+          onChange={(event) => setAnswers((prev) => ({ ...prev, [ids.openQuestion]: event.target.value }))}
+        />
       </Card>
 
       <Button type="button" onClick={() => void submit()} disabled={submitting}>
