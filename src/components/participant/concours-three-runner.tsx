@@ -201,7 +201,7 @@ export function ConcoursThreeRunner({ sessionId, status, ids, initialAnswers }: 
   const [selectedLeft, setSelectedLeft] = useState<string | null>(null);
   const [selectedRight, setSelectedRight] = useState<string | null>(null);
   const [links, setLinks] = useState<Array<{ from: string; to: string }>>(() => {
-    const saved = initialAnswers[`${ids.challenge1}-links`];
+    const saved = initialAnswers[ids.challenge1] ?? initialAnswers[`${ids.challenge1}-links`];
     return Array.isArray(saved) ? (saved as Array<{ from: string; to: string }>) : [];
   });
   const storageKey = `chemlearn:concours3:answers:${sessionId}`;
@@ -216,7 +216,7 @@ export function ConcoursThreeRunner({ sessionId, status, ids, initialAnswers }: 
     try {
       const parsed = JSON.parse(cached) as Record<string, unknown>;
       setAnswers((prev) => ({ ...parsed, ...prev }));
-      const cachedLinks = parsed[`${ids.challenge1}-links`];
+      const cachedLinks = parsed[ids.challenge1] ?? parsed[`${ids.challenge1}-links`];
       if (Array.isArray(cachedLinks)) {
         setLinks(cachedLinks as Array<{ from: string; to: string }>);
       }
@@ -271,7 +271,7 @@ export function ConcoursThreeRunner({ sessionId, status, ids, initialAnswers }: 
       const exists = prev.some((link) => link.from === from && link.to === to);
       if (exists) return prev;
       const next = [...prev, { from, to }];
-      setAnswers((current) => ({ ...current, [`${ids.challenge1}-links`]: next }));
+      setAnswers((current) => ({ ...current, [ids.challenge1]: next }));
       return next;
     });
   }
@@ -305,7 +305,7 @@ export function ConcoursThreeRunner({ sessionId, status, ids, initialAnswers }: 
   function removeLink(index: number) {
     setLinks((prev) => {
       const next = prev.filter((_, i) => i !== index);
-      setAnswers((current) => ({ ...current, [`${ids.challenge1}-links`]: next }));
+      setAnswers((current) => ({ ...current, [ids.challenge1]: next }));
       return next;
     });
   }
@@ -444,14 +444,6 @@ export function ConcoursThreeRunner({ sessionId, status, ids, initialAnswers }: 
                 </button>
               ))}
             </div>
-            <textarea
-              className="mt-3 min-h-20 w-full rounded-xl border border-[var(--line)] bg-white px-3 py-2 text-sm"
-              placeholder="Justification courte (optionnelle)"
-              value={typeof answers[`${question.id}-note`] === "string" ? String(answers[`${question.id}-note`]) : ""}
-              onChange={(event) =>
-                setAnswers((prev) => ({ ...prev, [`${question.id}-note`]: event.target.value }))
-              }
-            />
           </div>
         ))}
       </Card>
@@ -512,12 +504,6 @@ export function ConcoursThreeRunner({ sessionId, status, ids, initialAnswers }: 
             )}
           </div>
         </div>
-        <textarea
-          className="min-h-36 w-full rounded-xl border border-[var(--line)] bg-white px-3 py-2 text-sm"
-          placeholder="Ecrivez vos liens et justifications..."
-          value={typeof answers[ids.challenge1] === "string" ? String(answers[ids.challenge1]) : ""}
-          onChange={(event) => setAnswers((prev) => ({ ...prev, [ids.challenge1]: event.target.value }))}
-        />
       </Card>
 
       <Card className="space-y-4">
@@ -546,12 +532,6 @@ export function ConcoursThreeRunner({ sessionId, status, ids, initialAnswers }: 
             </button>
           ))}
         </div>
-        <textarea
-          className="min-h-24 w-full rounded-xl border border-[var(--line)] bg-white px-3 py-2 text-sm"
-          placeholder="Justification de votre choix..."
-          value={typeof answers[`${ids.challenge2}-note`] === "string" ? String(answers[`${ids.challenge2}-note`]) : ""}
-          onChange={(event) => setAnswers((prev) => ({ ...prev, [`${ids.challenge2}-note`]: event.target.value }))}
-        />
       </Card>
 
       <Button type="button" onClick={() => void submit()} disabled={submitting}>

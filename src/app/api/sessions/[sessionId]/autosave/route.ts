@@ -49,7 +49,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ sess
       { status: 409 },
     );
   }
-  if (examSession.exam.availableFrom && examSession.exam.availableFrom > new Date()) {
+  if (!examSession.exam.availableFrom || examSession.exam.availableFrom > new Date()) {
     return NextResponse.json({ message: "Exam not started" }, { status: 409 });
   }
   if (examSession.expiresAt && examSession.expiresAt <= new Date()) {

@@ -3,7 +3,6 @@ import { Role, SessionStatus } from "@prisma/client";
 import { requireRole } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { ParticipantResultsContent } from "@/components/participant/results-content";
-import { CONCOURS3_ACCESS_CODE } from "@/lib/constants";
 
 export default async function ResultsPage({ params }: { params: Promise<{ sessionId: string }> }) {
   const { sessionId } = await params;
@@ -19,17 +18,12 @@ export default async function ResultsPage({ params }: { params: Promise<{ sessio
 
   if (!result) notFound();
 
-  const isConcours = result.accessCode.code === CONCOURS3_ACCESS_CODE;
-
   return (
     <ParticipantResultsContent
       examTitle={result.exam.title}
       examOver={result.status === SessionStatus.EXPIRED}
-      reviewOnly={isConcours}
+      reviewOnly={false}
       submission={
-        isConcours
-          ? null
-          :
         result.submission
           ? {
               score: result.submission.score,

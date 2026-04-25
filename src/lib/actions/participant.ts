@@ -293,7 +293,7 @@ export async function redeemExamCodeAction(_: ActionState, formData: FormData): 
         status: SessionStatus.NOT_STARTED,
         expiresAt: shouldHoldConcours
           ? null
-          : !accessCode.exam.availableFrom || accessCode.exam.availableFrom <= now
+          : accessCode.exam.availableFrom && accessCode.exam.availableFrom <= now
             ? minutesFromNow(accessCode.exam.durationMinutes)
             : null,
         examSnapshot: toJson(snapshot),

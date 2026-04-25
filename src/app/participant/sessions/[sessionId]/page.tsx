@@ -32,14 +32,12 @@ export default async function SessionPage({ params }: { params: Promise<{ sessio
   }
 
   const isConcours = examSession.accessCode.code === CONCOURS3_ACCESS_CODE;
-  const waitingForStart = isConcours
-    ? !examSession.exam.availableFrom || examSession.exam.availableFrom > new Date()
-    : Boolean(examSession.exam.availableFrom && examSession.exam.availableFrom > new Date());
+  const waitingForStart = !examSession.exam.availableFrom || examSession.exam.availableFrom > new Date();
 
   if (waitingForStart) {
     return (
       <Card className="space-y-3">
-        <h1 className="font-display text-3xl text-slate-900">Concours en attente</h1>
+        <h1 className="font-display text-3xl text-slate-900">Exam en attente</h1>
         <p className="text-sm text-slate-600">The exam will be started soon.</p>
         <div className="pt-2">
           <ButtonLink href={`/participant/sessions/${examSession.id}`} variant="secondary">
