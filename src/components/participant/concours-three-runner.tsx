@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
@@ -18,370 +17,547 @@ type ConcoursThreeRunnerProps = {
     questions: string[];
     challenge1: string;
     challenge2: string;
-    openQuestion: string;
   };
   initialAnswers: Record<string, unknown>;
 };
 
 const flashOptions: Option[] = [
-  { key: "A", text: "Les problemes se traitent separement" },
-  { key: "B", text: "Les actions sont interconnectees" },
-  { key: "C", text: "Les ODD servent seulement a decorer" },
+  { key: "A", text: "Seulement des oceans" },
+  { key: "B", text: "D'objets plastiques qui se fragmentent et d'autres sources" },
+  { key: "C", text: "Seulement du verre" },
 ];
 
 const qcm: Array<{ prompt: string; options: Option[] }> = [
   {
-    prompt: "Q1. Les ODD doivent etre compris comme:",
+    prompt: "Q1. Les microplastiques sont:",
     options: [
-      { key: "A", text: "Une simple liste de logos" },
-      { key: "B", text: "Un systeme dynamique et interconnecte" },
-      { key: "C", text: "Un theme uniquement ecologique" },
+      { key: "A", text: "De tres petites particules plastiques, jusqu'a 5 mm" },
+      { key: "B", text: "Des morceaux de metal" },
+      { key: "C", text: "Des gouttes d'eau" },
     ],
   },
   {
-    prompt: "Q2. Les ODD couvrent principalement:",
+    prompt: "Q2. Les microplastiques peuvent provenir:",
     options: [
-      { key: "A", text: "Seulement l'environnement" },
-      { key: "B", text: "L'environnement, le social et l'economie" },
-      { key: "C", text: "Seulement la technologie" },
+      { key: "A", text: "De la fragmentation d'objets plastiques plus grands" },
+      { key: "B", text: "Seulement des nuages" },
+      { key: "C", text: "Seulement du sable" },
     ],
   },
   {
-    prompt: "Q3. Quel exemple montre le mieux l'interconnexion des ODD?",
+    prompt: "Q3. Un megot jete dans l'environnement:",
     options: [
-      { key: "A", text: "Ameliorer l'acces a l'eau agit aussi sur la sante et les conditions d'etude" },
-      { key: "B", text: "Un probleme d'eau n'a aucun lien avec la sante" },
-      { key: "C", text: "L'education n'a aucun lien avec l'environnement" },
+      { key: "A", text: "Peut liberer des substances toxiques et se fragmenter en microplastiques" },
+      { key: "B", text: "Devient immediatement du compost" },
+      { key: "C", text: "N'a aucun effet" },
     ],
   },
   {
-    prompt: "Q4. Une ville durable repose surtout sur:",
+    prompt: "Q4. Selon l'OMS, l'exposition humaine aux microplastiques peut se faire notamment par:",
     options: [
-      { key: "A", text: "Une seule solution miracle" },
-      { key: "B", text: "L'addition de plusieurs solutions complementaires" },
-      { key: "C", text: "Seulement davantage de circulation automobile" },
+      { key: "A", text: "Ingestion et inhalation" },
+      { key: "B", text: "Seulement par la vue" },
+      { key: "C", text: "Seulement par l'ecriture" },
     ],
   },
   {
-    prompt: "Q5. Le comportement le plus coherent avec l'ODD 12 (consommation responsable) est:",
+    prompt: "Q5. Les dangers potentiels associes aux microplastiques peuvent concerner:",
     options: [
-      { key: "A", text: "Acheter plus pendant les promotions" },
-      { key: "B", text: "Reparer ou reutiliser avant de remplacer" },
-      { key: "C", text: "Jeter un appareil a la premiere panne" },
+      { key: "A", text: "Les particules, les substances chimiques et des biofilms" },
+      { key: "B", text: "Seulement la couleur" },
+      { key: "C", text: "Seulement la temperature" },
     ],
   },
   {
-    prompt: "Q6. L'expression personne ne gagne seul met surtout en avant:",
+    prompt: "Q6. Dire \"on connait deja tous les effets sanitaires avec certitude\" est:",
     options: [
-      { key: "A", text: "La cooperation" },
-      { key: "B", text: "La memorisation passive" },
-      { key: "C", text: "La competition individuelle pure" },
+      { key: "A", text: "Faux" },
+      { key: "B", text: "Vrai" },
+      { key: "C", text: "Obligatoire" },
     ],
   },
   {
-    prompt: "Q7. Quel projet de lycee correspond le mieux a une approche ODD ?",
+    prompt: "Q7. Les plastiques se recyclent tous ensemble sans difficulte:",
     options: [
-      { key: "A", text: "Une seule journee d'affichage sans suite" },
-      { key: "B", text: "Un projet avec diagnostic, actions, suivi et implication des eleves" },
-      { key: "C", text: "Une affiche posee dans le couloir sans discussion" },
+      { key: "A", text: "Vrai" },
+      { key: "B", text: "Faux" },
+      { key: "C", text: "Seulement la nuit" },
     ],
   },
   {
-    prompt: "Q8. L'epuisement des ressources naturelles concerne:",
+    prompt: "Q8. Un megot peut polluer:",
     options: [
-      { key: "A", text: "Seulement le petrole" },
-      { key: "B", text: "Energies fossiles, minerais, ressources halieutiques et eau douce" },
-      { key: "C", text: "Seulement les forets tropicales" },
+      { key: "A", text: "Environ 500 litres d'eau" },
+      { key: "B", text: "5 litres d'eau seulement" },
+      { key: "C", text: "0 litre" },
     ],
   },
   {
-    prompt:
-      "Q9. Quel binome d'ODD est le plus directement mobilise par le tri, la reduction des dechets et la baisse des emissions ?",
+    prompt: "Q9. Les megots representent dans le support fourni:",
     options: [
-      { key: "A", text: "ODD 12 et ODD 13" },
-      { key: "B", text: "ODD 4 et ODD 16" },
-      { key: "C", text: "ODD 8 et ODD 9" },
+      { key: "A", text: "Pres de 40 % des dechets presents en mer Mediterranee" },
+      { key: "B", text: "1 %" },
+      { key: "C", text: "0 %" },
     ],
   },
   {
-    prompt: "Q10. Dans une pedagogie ODD efficace, l'eleve doit etre:",
+    prompt: "Q10. Parmi ces sources, laquelle est reconnue comme importante pour les microplastiques ?",
     options: [
-      { key: "A", text: "Spectateur" },
-      { key: "B", text: "Acteur" },
-      { key: "C", text: "Simple reciteur" },
+      { key: "A", text: "L'usure des pneus" },
+      { key: "B", text: "Les nuages uniquement" },
+      { key: "C", text: "Les roches magnetiques" },
     ],
   },
   {
-    prompt: "Q11. Le message former autrement aujourd'hui pour permettre aux eleves d'agir demain signifie surtout:",
+    prompt: "Q11. Les textiles synthetiques peuvent contribuer aux microplastiques:",
     options: [
-      { key: "A", text: "Apprendre pour agir" },
-      { key: "B", text: "Apprendre seulement pour reciter" },
-      { key: "C", text: "Agir sans comprendre" },
+      { key: "A", text: "Oui, via des microfibres" },
+      { key: "B", text: "Non, jamais" },
+      { key: "C", text: "Seulement s'ils sont en coton pur" },
     ],
   },
   {
-    prompt: "Q12. Quelle proposition est la plus systemique?",
+    prompt: "Q12. La meilleure strategie generale face aux microplastiques est:",
     options: [
-      { key: "A", text: "Traiter un probleme de dechets sans lien avec sante, climat ou ville" },
-      { key: "B", text: "Relier dechets, consommation, energie, sante et climat dans une meme analyse" },
-      { key: "C", text: "Etudier chaque probleme sans aucun lien" },
+      { key: "A", text: "Prevenir a la source et mieux gerer les dechets" },
+      { key: "B", text: "Attendre que tout disparaisse seul" },
+      { key: "C", text: "Melanger tous les dechets ensemble" },
     ],
   },
   {
-    prompt: "Q13. Une approche holistique des ODD signifie:",
+    prompt: "Q13. Boire dans une gourde durable et eviter les plastiques jetables quand c'est possible:",
     options: [
-      { key: "A", text: "Relier dimensions sociales, environnementales et economiques" },
-      { key: "B", text: "Etudier seulement l'environnement" },
-      { key: "C", text: "Etudier seulement l'economie" },
+      { key: "A", text: "Peut aider a reduire la production de dechets plastiques" },
+      { key: "B", text: "Augmente toujours les dechets" },
+      { key: "C", text: "N'a aucun lien" },
     ],
   },
   {
-    prompt: "Q14. Quel projet evite le mieux le greenwashing?",
+    prompt: "Q14. Un lycee qui veut limiter la dispersion de microplastiques devrait:",
     options: [
-      { key: "A", text: "Une campagne d'affiches sans action mesurable" },
-      { key: "B", text: "Un projet avec objectifs, indicateurs, suivi et bilan" },
-      { key: "C", text: "Un slogan ecologique sans changement reel" },
+      { key: "A", text: "Reduire les dechets abandonnes et renforcer le tri" },
+      { key: "B", text: "Laisser les dechets dans la cour" },
+      { key: "C", text: "Bruler les plastiques sur place" },
     ],
   },
   {
-    prompt: "Q15. Pour un projet ODD dans un lycee, le partenariat le plus coherent est:",
+    prompt: "Q15. Les microplastiques sont retrouves:",
     options: [
-      { key: "A", text: "Eleves + enseignants + direction + commune/association" },
-      { key: "B", text: "Un seul eleve isole" },
-      { key: "C", text: "Un projet sans acteur local" },
+      { key: "A", text: "Dans l'eau, l'air et les sols" },
+      { key: "B", text: "Seulement dans les livres" },
+      { key: "C", text: "Seulement dans les metaux" },
     ],
   },
   {
-    prompt: "Q16. Quand un etablissement ameliore l'acces a l'eau potable, cela peut aussi ameliorer:",
+    prompt: "Q16. La phrase la plus juste aujourd'hui est:",
     options: [
-      { key: "A", text: "La sante et les conditions d'apprentissage" },
-      { key: "B", text: "Seulement la couleur des murs" },
-      { key: "C", text: "Rien d'autre" },
+      {
+        key: "A",
+        text: "Il existe des preoccupations de sante, mais la recherche continue pour preciser plusieurs effets",
+      },
+      { key: "B", text: "Il n'y a aucune question de sante" },
+      { key: "C", text: "Tout est deja totalement prouve dans le moindre detail" },
     ],
   },
   {
-    prompt: "Q17. Quel ensemble d'indicateurs permet le mieux de suivre un projet ODD au lycee ?",
+    prompt: "Q17. Une politique efficace contre les microplastiques agit:",
     options: [
-      { key: "A", text: "Kg de dechets evites, litres d'eau economises, kWh economises, taux de participation" },
-      { key: "B", text: "Uniquement le nombre d'affiches" },
-      { key: "C", text: "Seulement la couleur du logo" },
+      { key: "A", text: "Sur tout le cycle de vie des plastiques" },
+      { key: "B", text: "Seulement au moment ou l'objet est achete" },
+      { key: "C", text: "Seulement en mer" },
     ],
   },
   {
-    prompt: "Q18. Une action ecologique devient plus juste socialement quand:",
+    prompt: "Q18. Le meilleur message final pour ce concours est:",
     options: [
-      { key: "A", text: "Elle reste accessible a tous les eleves" },
-      { key: "B", text: "Elle exclut les eleves qui ont moins de moyens" },
-      { key: "C", text: "Elle augmente les inegalites" },
+      { key: "A", text: "\"Invisible ne veut pas dire sans importance\"" },
+      { key: "B", text: "\"Ce qui est petit n'a jamais d'effet\"" },
+      { key: "C", text: "\"Plus de plastique jete = moins de pollution\"" },
     ],
   },
   {
-    prompt: "Q19. Une approche systemique des ODD consiste a:",
+    prompt: "Q19. Les microplastiques secondaires proviennent surtout:",
     options: [
-      { key: "A", text: "Traiter chaque probleme isole" },
-      { key: "B", text: "Identifier les relations entre causes, effets, acteurs et solutions" },
-      { key: "C", text: "Choisir un seul ODD et ignorer les autres" },
+      { key: "A", text: "De la fragmentation d'objets plus grands" },
+      { key: "B", text: "Seulement de roches naturelles" },
+      { key: "C", text: "Du verre fondu" },
     ],
   },
   {
-    prompt: "Q20. Une action locale pertinente pour les ODD est dite levier lorsqu'elle:",
+    prompt: "Q20. Les microplastiques primaires sont:",
     options: [
-      { key: "A", text: "Produit un effet positif sur plusieurs objectifs a la fois" },
-      { key: "B", text: "N'agit que sur un seul indicateur visuel" },
-      { key: "C", text: "Remplace totalement les politiques publiques" },
+      { key: "A", text: "Des particules deja petites au depart" },
+      { key: "B", text: "Seulement des bouteilles cassees" },
+      { key: "C", text: "Des metaux tres fins" },
     ],
   },
   {
-    prompt: "Q21. Lequel des projets suivants illustre le mieux une tension entre plusieurs objectifs qu'il faut arbitrer ?",
+    prompt: "Q21. Une source importante de microplastiques dans l'environnement est:",
     options: [
-      { key: "A", text: "Construire rapidement sans etude d'impact" },
-      { key: "B", text: "Developper une activite economique tout en limitant pollution et inegalites" },
-      { key: "C", text: "Fermer tous les clubs scolaires" },
+      { key: "A", text: "L'usure des pneus" },
+      { key: "B", text: "Les feuilles d'arbres" },
+      { key: "C", text: "Le verre recycle" },
     ],
   },
   {
-    prompt: "Q22. Un bon indicateur de suivi d'un projet ODD doit etre:",
+    prompt: "Q22. Les textiles synthetiques peuvent liberer:",
     options: [
-      { key: "A", text: "Mesurable, pertinent et comparable dans le temps" },
-      { key: "B", text: "Decoratif seulement" },
-      { key: "C", text: "Changeant chaque semaine sans raison" },
+      { key: "A", text: "Des microfibres plastiques" },
+      { key: "B", text: "De la pierre" },
+      { key: "C", text: "Du carton" },
     ],
   },
   {
-    prompt: "Q23. Pourquoi l'ODD 17 (partenariats) est-il transversal ?",
+    prompt: "Q23. Les microplastiques peuvent etre presents:",
     options: [
-      { key: "A", text: "Parce qu'il ne sert qu'aux relations internationales" },
-      { key: "B", text: "Parce qu'il aide a mettre en oeuvre les autres objectifs" },
-      { key: "C", text: "Parce qu'il remplace tous les autres ODD" },
+      { key: "A", text: "Dans l'air, l'eau et les sols" },
+      { key: "B", text: "Seulement dans les oceans" },
+      { key: "C", text: "Seulement dans les usines" },
     ],
   },
   {
-    prompt: "Q24. Un etablissement reduit de moitie l'usage des bouteilles jetables. Quel ensemble d'effets est le plus plausible ?",
+    prompt: "Q24. Le risque lie aux microplastiques est etudie car ils peuvent:",
     options: [
-      { key: "A", text: "Moins de dechets, moins de couts, meilleure sensibilisation" },
-      { key: "B", text: "Plus de dechets et plus de gaspillage" },
-      { key: "C", text: "Aucun effet educatif possible" },
+      { key: "A", text: "Entrer dans la chaine alimentaire et exposer les humains" },
+      { key: "B", text: "Disparaitre immediatement" },
+      { key: "C", text: "Se transformer automatiquement en compost" },
     ],
   },
   {
-    prompt: "Q25. Dans une logique ODD, une solution durable doit eviter:",
+    prompt: "Q25. Selon l'OMS, parler des effets sanitaires des microplastiques demande:",
     options: [
-      { key: "A", text: "Les effets rebond et les impacts deplaces" },
-      { key: "B", text: "L'analyse des consequences" },
-      { key: "C", text: "La participation des usagers" },
+      { key: "A", text: "Prudence scientifique" },
+      { key: "B", text: "Aucune nuance" },
+      { key: "C", text: "Des certitudes absolues sur tout" },
     ],
   },
   {
-    prompt: "Q26. Le greenwashing dans un projet scolaire correspond plutot a:",
+    prompt: "Q26. Une bonne strategie de prevention est:",
     options: [
-      { key: "A", text: "Une communication ecologique sans changements reels verifiables" },
-      { key: "B", text: "Une action mesuree avec resultats" },
-      { key: "C", text: "Un partenariat actif avec suivi" },
+      { key: "A", text: "Reduire l'usage inutile du plastique et mieux gerer les dechets" },
+      { key: "B", text: "Jeter les plastiques dans la nature" },
+      { key: "C", text: "Melanger tous les dechets" },
     ],
   },
   {
-    prompt: "Q27. Le meilleur exemple d'interconnexion entre ODD est:",
+    prompt: "Q27. Les megots sont problematiques car ils:",
     options: [
-      { key: "A", text: "L'acces a l'eau ameliore la sante, la frequentation scolaire et la resilience locale" },
-      { key: "B", text: "Chaque ODD fonctionne sans lien avec les autres" },
-      { key: "C", text: "Les ODD ne concernent que les Etats" },
+      { key: "A", text: "Peuvent relacher des substances toxiques et contribuer aux microplastiques" },
+      { key: "B", text: "Se transforment vite en compost" },
+      { key: "C", text: "N'ont pas d'impact notable" },
     ],
   },
   {
-    prompt: "Q28. Dans un projet ODD au lycee, l'etape de diagnostic sert surtout a:",
+    prompt: "Q28. Dire \"un dechet plastique abandonne est sans consequence s'il est petit\" est:",
     options: [
-      { key: "A", text: "Comprendre le probleme avant d'agir" },
-      { key: "B", text: "Perdre du temps" },
-      { key: "C", text: "Remplacer l'action concrete" },
+      { key: "A", text: "Faux" },
+      { key: "B", text: "Vrai" },
+      { key: "C", text: "Exact seulement en ville" },
     ],
   },
   {
-    prompt: "Q29. La participation des eleves est importante parce que:",
+    prompt: "Q29. Les systemes de traitement de l'eau peuvent:",
     options: [
-      { key: "A", text: "Elle ameliore l'appropriation, la creativite et la durabilite des actions" },
-      { key: "B", text: "Elle complique forcement tout projet" },
-      { key: "C", text: "Elle n'a aucun effet sur les resultats" },
+      { key: "A", text: "Retenir une partie des microplastiques" },
+      { key: "B", text: "Tout laisser passer obligatoirement" },
+      { key: "C", text: "Creer du plastique a partir de l'eau" },
     ],
   },
   {
-    prompt: "Q30. Une politique d'achat responsable dans un etablissement agit principalement sur:",
+    prompt: "Q30. Le lien entre microplastiques et sante humaine est etudie notamment via:",
     options: [
-      { key: "A", text: "L'ODD 12, avec effets possibles sur d'autres ODD" },
-      { key: "B", text: "Aucun ODD" },
-      { key: "C", text: "Seulement l'apparence du lycee" },
+      { key: "A", text: "L'exposition par boisson, alimentation et air" },
+      { key: "B", text: "Uniquement la couleur des plastiques" },
+      { key: "C", text: "Seulement l'odeur des dechets" },
     ],
   },
   {
-    prompt: "Q31. Lequel de ces couples action / risque est le plus juste ?",
+    prompt: "Q31. Un lycee qui veut reduire son impact plastique devrait d'abord:",
     options: [
-      { key: "A", text: "Installer des climatiseurs partout / hausse possible de la consommation energetique" },
-      { key: "B", text: "Reparer les fuites d'eau / augmentation directe des dechets plastiques" },
-      { key: "C", text: "Developper le tri / disparition immediate de tous les problemes" },
+      { key: "A", text: "Agir sur les dechets a la source" },
+      { key: "B", text: "Attendre sans rien faire" },
+      { key: "C", text: "Remplacer le tri par des affiches seules" },
     ],
   },
   {
-    prompt: "Q32. Une demarche coherente avec les ODD cherche a:",
+    prompt: "Q32. Le recyclage du plastique est utile mais:",
     options: [
-      { key: "A", text: "Maximiser les co-benefices et limiter les effets negatifs" },
-      { key: "B", text: "Agir vite sans evaluation" },
-      { key: "C", text: "Choisir les actions les plus visibles seulement" },
+      { key: "A", text: "Il ne suffit pas a lui seul" },
+      { key: "B", text: "Il rend inutile toute prevention" },
+      { key: "C", text: "Il marche pareil pour tous les plastiques melanges" },
     ],
   },
   {
-    prompt: "Q33. Quel exemple correspond le mieux a la justice sociale dans un projet environnemental ?",
+    prompt: "Q33. La taille tres petite des microplastiques pose probleme car:",
     options: [
-      { key: "A", text: "Reserver les benefices a quelques eleves" },
-      { key: "B", text: "Concevoir des actions accessibles a tous" },
-      { key: "C", text: "Exclure les eleves les plus eloignes de l'engagement" },
+      { key: "A", text: "Ils sont difficiles a reperer et a suivre" },
+      { key: "B", text: "Ils deviennent du metal" },
+      { key: "C", text: "Ils ne circulent nulle part" },
     ],
   },
   {
-    prompt: "Q34. Pourquoi les ODD sont-ils utiles dans un etablissement scolaire ?",
+    prompt: "Q34. Le message \"Invisible ne veut pas dire inoffensif\" s'applique ici car:",
     options: [
-      { key: "A", text: "Ils donnent un cadre commun pour analyser, prioriser et agir" },
-      { key: "B", text: "Ils servent uniquement a faire des affiches" },
-      { key: "C", text: "Ils empechent les projets locaux" },
+      { key: "A", text: "Les particules sont petites mais potentiellement preoccupantes" },
+      { key: "B", text: "Tout ce qui est petit est forcement sans effet" },
+      { key: "C", text: "Les microplastiques n'existent pas" },
     ],
   },
   {
-    prompt: "Q35. Une donnee brute devient vraiment utile dans un projet ODD quand:",
+    prompt: "Q35. Une bonne action de sensibilisation au lycee serait:",
     options: [
-      { key: "A", text: "Elle est interpretee dans son contexte" },
-      { key: "B", text: "Elle est affichee sans explication" },
-      { key: "C", text: "Elle est choisie au hasard" },
+      { key: "A", text: "Expliquer les sources, les voies d'exposition et les gestes de reduction" },
+      { key: "B", text: "Dire seulement \"le plastique c'est mal\" sans explication" },
+      { key: "C", text: "Ne parler que des oceans" },
     ],
   },
   {
-    prompt: "Q36. Quelle situation illustre le mieux une gouvernance participative ?",
+    prompt: "Q36. Le cycle de vie du plastique comprend:",
     options: [
-      { key: "A", text: "Le projet est decide, mis en oeuvre et evalue avec plusieurs acteurs" },
-      { key: "B", text: "Une seule personne decide sans concertation" },
-      { key: "C", text: "Les usagers decouvrent le projet a la fin" },
+      { key: "A", text: "Production, usage, dechets et dispersion eventuelle" },
+      { key: "B", text: "Seulement l'achat" },
+      { key: "C", text: "Seulement le recyclage" },
     ],
   },
   {
-    prompt: "Q37. Lequel de ces objectifs de projet est le mieux formule ?",
+    prompt: "Q37. Un exemple d'action individuelle realiste est:",
     options: [
-      { key: "A", text: "Rendre le lycee meilleur" },
-      { key: "B", text: "Reduire de 30 % les bouteilles jetables en 6 mois" },
-      { key: "C", text: "Faire quelque chose pour la planete" },
+      { key: "A", text: "Eviter le jetable quand une alternative durable existe" },
+      { key: "B", text: "Jeter les dechets hors des poubelles" },
+      { key: "C", text: "Bruler le plastique chez soi" },
     ],
   },
   {
-    prompt: "Q38. Dans une logique de developpement durable, une solution est robuste si:",
+    prompt: "Q38. Le principal enjeu scientifique aujourd'hui n'est pas seulement de detecter les microplastiques, mais aussi:",
     options: [
-      { key: "A", text: "Elle reste pertinente malgre les changements de contexte" },
-      { key: "B", text: "Elle depend d'une seule personne" },
-      { key: "C", text: "Elle fonctionne seulement un jour d'evenement" },
+      { key: "A", text: "De mieux comprendre leurs effets et les expositions reelles" },
+      { key: "B", text: "De changer leur couleur" },
+      { key: "C", text: "De les rendre visibles a l'oeil nu uniquement" },
     ],
   },
   {
-    prompt: "Q39. Pourquoi faut-il faire une evaluation finale apres un projet ODD ?",
+    prompt: "Q39. Une politique efficace contre les microplastiques combine:",
     options: [
-      { key: "A", text: "Pour mesurer les resultats, corriger les limites et preparer la suite" },
-      { key: "B", text: "Seulement pour attribuer une note" },
-      { key: "C", text: "Parce que c'est obligatoire dans tous les cas" },
+      { key: "A", text: "Prevention, collecte, tri, reduction et sensibilisation" },
+      { key: "B", text: "Une seule affiche" },
+      { key: "C", text: "Un seul nettoyage annuel" },
     ],
   },
   {
-    prompt: "Q40. Quel enonce resume le mieux l'esprit des ODD au lycee ?",
+    prompt: "Q40. La meilleure conclusion pour ce concours est:",
     options: [
-      { key: "A", text: "Comprendre les liens, agir localement, mesurer l'impact" },
-      { key: "B", text: "Memoriser les logos, puis oublier" },
-      { key: "C", text: "Choisir un seul probleme sans regarder le reste" },
+      { key: "A", text: "Reduire la pollution plastique aide aussi a proteger la sante et l'environnement" },
+      { key: "B", text: "Les microplastiques sont trop petits pour compter" },
+      { key: "C", text: "La prevention ne sert a rien" },
+    ],
+  },
+  {
+    prompt: "Q41. Un lycee veut reduire l'exposition potentielle aux microplastiques. Quelle action est la plus pertinente en priorite ?",
+    options: [
+      { key: "A", text: "Remplacer seulement les affiches plastifiees par du papier" },
+      { key: "B", text: "Reduire les plastiques jetables, mieux trier, et limiter l'abandon de dechets sur le site" },
+      { key: "C", text: "Fermer la bibliotheque" },
+    ],
+  },
+  {
+    prompt: "Q42. Pourquoi une strategie \"nettoyer seulement en fin de chaine\" est-elle insuffisante ?",
+    options: [
+      { key: "A", text: "Parce qu'elle ne traite pas les sources de production et de dispersion" },
+      { key: "B", text: "Parce que le nettoyage est toujours inutile" },
+      { key: "C", text: "Parce que les dechets disparaissent seuls" },
+    ],
+  },
+  {
+    prompt: "Q43. Quel scenario reflete le mieux une logique de prevention ?",
+    options: [
+      { key: "A", text: "Reduire les emballages inutiles, ameliorer la collecte, sensibiliser les usagers" },
+      { key: "B", text: "Produire autant puis esperer recycler parfaitement" },
+      { key: "C", text: "Attendre que la pollution soit visible avant d'agir" },
+    ],
+  },
+  {
+    prompt: "Q44. Dans une analyse de sante publique, pourquoi faut-il distinguer danger et exposition ?",
+    options: [
+      {
+        key: "A",
+        text: "Parce qu'un materiau potentiellement dangereux n'entraine pas automatiquement le meme risque pour tous sans tenir compte du niveau et de la voie d'exposition",
+      },
+      { key: "B", text: "Parce qu'ils signifient exactement la meme chose" },
+      { key: "C", text: "Parce que l'exposition n'a aucun role" },
+    ],
+  },
+  {
+    prompt: "Q45. Pourquoi l'usure des pneus est-elle un enjeu important dans le debat sur les microplastiques ?",
+    options: [
+      { key: "A", text: "Parce qu'elle constitue l'une des sources abondantes de particules rejetees dans l'environnement" },
+      { key: "B", text: "Parce qu'un pneu est biodegradable" },
+      { key: "C", text: "Parce qu'elle ne concerne que les routes desertes" },
+    ],
+  },
+  {
+    prompt: "Q46. Un etablissement veut acheter des uniformes. Quel critere est le plus coherent avec une approche \"microplastiques + sante + durabilite\" ?",
+    options: [
+      { key: "A", text: "Choisir uniquement le prix le plus bas, sans autre critere" },
+      { key: "B", text: "Evaluer aussi la durabilite, l'entretien, la composition textile et la logique de circularite" },
+      { key: "C", text: "Changer d'uniforme tous les mois" },
+    ],
+  },
+  {
+    prompt: "Q47. Quelle affirmation montre la meilleure comprehension scientifique actuelle ?",
+    options: [
+      { key: "A", text: "Tous les effets des microplastiques sur la sante humaine sont deja connus avec certitude" },
+      { key: "B", text: "Il existe des preoccupations serieuses, mais plusieurs mecanismes et niveaux de risque doivent encore etre mieux documentes" },
+      { key: "C", text: "Les microplastiques sont sans interet pour la sante publique" },
+    ],
+  },
+  {
+    prompt: "Q48. Quel exemple illustre le mieux une \"source secondaire\" de microplastiques ?",
+    options: [
+      { key: "A", text: "Une bouteille abandonnee qui se fragmente au soleil et avec l'usure" },
+      { key: "B", text: "Une microbille deja fabriquee a tres petite taille" },
+      { key: "C", text: "Une molecule d'eau" },
+    ],
+  },
+  {
+    prompt: "Q49. Pourquoi les microplastiques posent-ils un defi methodologique pour la recherche ?",
+    options: [
+      { key: "A", text: "Parce qu'ils sont petits, heterogenes, et presents dans des milieux varies, ce qui complique leur mesure et la comparaison des etudes" },
+      { key: "B", text: "Parce qu'ils sont faciles a voir partout a l'oeil nu" },
+      { key: "C", text: "Parce qu'ils ont tous la meme forme et la meme composition" },
+    ],
+  },
+  {
+    prompt: "Q50. Une politique centree uniquement sur le recyclage a quelle limite principale ?",
+    options: [
+      { key: "A", text: "Elle ne suffit pas si la production, l'usage jetable et les fuites dans l'environnement continuent au meme rythme" },
+      { key: "B", text: "Elle supprime automatiquement toute pollution" },
+      { key: "C", text: "Elle rend inutile toute reduction a la source" },
+    ],
+  },
+  {
+    prompt: "Q51. Quel raisonnement est le plus solide ?",
+    options: [
+      { key: "A", text: "\"Comme la science n'a pas tout prouve, il ne faut rien faire.\"" },
+      { key: "B", text: "\"Meme avec des incertitudes, on peut mettre en place des mesures raisonnables de prevention.\"" },
+      { key: "C", text: "\"Il faut interdire immediatement tout materiau sans analyse.\"" },
+    ],
+  },
+  {
+    prompt: "Q52. Dans quel cas parle-t-on le plus d'une approche \"cycle de vie\" du plastique ?",
+    options: [
+      { key: "A", text: "Quand on etudie production, usage, dechets, dispersion et impacts" },
+      { key: "B", text: "Quand on regarde seulement le moment ou l'objet est achete" },
+      { key: "C", text: "Quand on observe uniquement la couleur du materiau" },
+    ],
+  },
+  {
+    prompt: "Q53. Pourquoi les microfibres textiles interessent-elles particulierement les chercheurs ?",
+    options: [
+      { key: "A", text: "Parce qu'elles peuvent etre liberees tout au long de l'usage et de l'entretien des textiles synthetiques" },
+      { key: "B", text: "Parce qu'elles n'existent que dans les laboratoires" },
+      { key: "C", text: "Parce qu'elles sont toujours visibles au microscope scolaire simple" },
+    ],
+  },
+  {
+    prompt: "Q54. Une ville remplace les bouteilles jetables dans les batiments publics par des fontaines et contenants reutilisables. Quel effet est le plus plausible ?",
+    options: [
+      { key: "A", text: "Reduction de certains dechets plastiques a usage unique" },
+      { key: "B", text: "Augmentation automatique des microplastiques dans l'air" },
+      { key: "C", text: "Disparition immediate de toute pollution plastique" },
+    ],
+  },
+  {
+    prompt: "Q55. Quelle proposition montre le meilleur esprit critique ?",
+    options: [
+      { key: "A", text: "\"Les microplastiques sont presents dans plusieurs milieux ; il faut hierarchiser les sources et les expositions avant de conclure.\"" },
+      { key: "B", text: "\"Toute particule plastique provoque necessairement le meme effet chez tout le monde.\"" },
+      { key: "C", text: "\"Si une particule est petite, elle est forcement sans importance.\"" },
+    ],
+  },
+  {
+    prompt: "Q56. Pourquoi l'abandon de dechets plastiques dans l'espace public reste-t-il un probleme meme quand le dechet parait \"petit\" ?",
+    options: [
+      { key: "A", text: "Parce qu'il peut se fragmenter, disperser des particules et compliquer la gestion environnementale" },
+      { key: "B", text: "Parce qu'un petit dechet nettoie parfois le sol" },
+      { key: "C", text: "Parce qu'il se transforme en compost" },
+    ],
+  },
+  {
+    prompt: "Q57. Une campagne scolaire veut etre scientifiquement honnete. Quelle formule est la meilleure ?",
+    options: [
+      { key: "A", text: "\"Les microplastiques sont un sujet etudie de pres ; on connait des voies d'exposition et des preoccupations, mais la recherche continue pour preciser certains effets.\"" },
+      { key: "B", text: "\"Tout est deja demontre dans le detail, il n'y a plus rien a etudier.\"" },
+      { key: "C", text: "\"Comme il existe des incertitudes, le sujet n'a aucune importance.\"" },
+    ],
+  },
+  {
+    prompt: "Q58. Quel ensemble d'indicateurs serait le plus utile pour suivre un plan \"plastique et sante\" dans un lycee ?",
+    options: [
+      { key: "A", text: "Nombre de bouteilles jetables utilisees, qualite du tri, taux d'equipement en contenants reutilisables, participation des eleves" },
+      { key: "B", text: "Couleur des murs, taille des fenetres, sonnerie du matin" },
+      { key: "C", text: "Nombre de messages sur les reseaux sociaux seulement" },
+    ],
+  },
+  {
+    prompt: "Q59. Quelle action a le plus de chances de produire un effet durable ?",
+    options: [
+      { key: "A", text: "Une journee symbolique sans suite" },
+      { key: "B", text: "Un plan combinant achats responsables, reduction du jetable, tri, sensibilisation et suivi" },
+      { key: "C", text: "Une affiche sans changement de pratiques" },
+    ],
+  },
+  {
+    prompt: "Q60. La conclusion la plus rigoureuse pour ce concours est:",
+    options: [
+      { key: "A", text: "Les microplastiques constituent un enjeu environnemental et sanitaire plausible qui demande prevention, recherche continue et meilleure gestion des plastiques" },
+      { key: "B", text: "Les microplastiques ne concernent que les oceans lointains" },
+      { key: "C", text: "Le seul sujet important est le recyclage final" },
     ],
   },
 ];
 
-const challengeTwoOptions: Option[] = [
-  { key: "A", text: "Peindre juste un mur en vert" },
-  {
-    key: "B",
-    text: "Installer des fontaines, reparer les fuites, optimiser l'eclairage, rendre les clubs plus inclusifs",
-  },
-  { key: "C", text: "Mettre seulement une affiche sauvez la planete" },
-];
+const challengeOneItems = [
+  { id: "pneu", label: "Pneu" },
+  { id: "microbilles", label: "Microbilles cosmetiques" },
+  { id: "textile", label: "Textile synthetique" },
+  { id: "bouteille", label: "Bouteille plastique cassee" },
+  { id: "sac", label: "Sac plastique fragmente" },
+  { id: "peinture", label: "Peinture ecaillee" },
+] as const;
 
-const oddIcons = [
-  { code: "ODD 3", title: "Bonne sante et bien-etre", icon: "HEALTH" },
-  { code: "ODD 4", title: "Education de qualite", icon: "EDU" },
-  { code: "ODD 6", title: "Eau propre et assainissement", icon: "WATER" },
-  { code: "ODD 12", title: "Consommation responsable", icon: "RESP" },
-  { code: "ODD 13", title: "Action climatique", icon: "CLIMATE" },
-  { code: "ODD 17", title: "Partenariats", icon: "LINK" },
+const challengeOneCategories = [
+  { key: "primary", label: "Source primaire" },
+  { key: "secondary", label: "Source secondaire" },
+] as const;
+
+const challengeTwoSteps = [
+  { id: "produit", label: "Produit plastique" },
+  { id: "usure", label: "Usure / fragmentation" },
+  { id: "environnement", label: "Microplastiques dans l'environnement" },
+  { id: "milieux", label: "Presence dans eau / air / aliments" },
+  { id: "exposition", label: "Exposition humaine possible" },
+  { id: "prevention", label: "Necessite de prevention" },
 ] as const;
 
 export function ConcoursThreeRunner({ sessionId, status, ids, initialAnswers }: ConcoursThreeRunnerProps) {
   const router = useRouter();
   const [answers, setAnswers] = useState<Record<string, unknown>>(initialAnswers);
   const [submitting, setSubmitting] = useState(false);
-  const [selectedLeft, setSelectedLeft] = useState<string | null>(null);
-  const [selectedRight, setSelectedRight] = useState<string | null>(null);
-  const [links, setLinks] = useState<Array<{ from: string; to: string }>>(() => {
-    const saved = initialAnswers[ids.challenge1] ?? initialAnswers[`${ids.challenge1}-links`];
-    return Array.isArray(saved) ? (saved as Array<{ from: string; to: string }>) : [];
+  const [sourceAnswers, setSourceAnswers] = useState<Record<string, "primary" | "secondary">>(() => {
+    const saved = initialAnswers[ids.challenge1];
+    if (saved && typeof saved === "object" && !Array.isArray(saved)) {
+      return saved as Record<string, "primary" | "secondary">;
+    }
+    return {};
   });
-  const storageKey = `chemlearn:concours3:answers:${sessionId}`;
+  const [challengeTwoOrder, setChallengeTwoOrder] = useState<string[]>(() => {
+    const saved = initialAnswers[ids.challenge2];
+    if (Array.isArray(saved) && saved.length) {
+      return saved.map(String);
+    }
+    return challengeTwoSteps.map((step) => step.id);
+  });
+  const storageKey = `chemlearn:concours2:answers:${sessionId}`;
 
   const readyQuestions = useMemo(() => {
     return ids.questions.map((id, index) => ({ id, ...qcm[index] })).filter((item) => Boolean(item.prompt));
@@ -393,14 +569,18 @@ export function ConcoursThreeRunner({ sessionId, status, ids, initialAnswers }: 
     try {
       const parsed = JSON.parse(cached) as Record<string, unknown>;
       setAnswers((prev) => ({ ...parsed, ...prev }));
-      const cachedLinks = parsed[ids.challenge1] ?? parsed[`${ids.challenge1}-links`];
-      if (Array.isArray(cachedLinks)) {
-        setLinks(cachedLinks as Array<{ from: string; to: string }>);
+      const cachedSources = parsed[ids.challenge1];
+      if (cachedSources && typeof cachedSources === "object" && !Array.isArray(cachedSources)) {
+        setSourceAnswers(cachedSources as Record<string, "primary" | "secondary">);
+      }
+      const cachedOrder = parsed[ids.challenge2];
+      if (Array.isArray(cachedOrder) && cachedOrder.length) {
+        setChallengeTwoOrder(cachedOrder.map(String));
       }
     } catch (error) {
       console.error("Failed to restore local answers", error);
     }
-  }, [ids.challenge1, storageKey]);
+  }, [ids.challenge1, ids.challenge2, storageKey]);
 
   useEffect(() => {
     window.localStorage.setItem(storageKey, JSON.stringify(answers));
@@ -440,49 +620,26 @@ export function ConcoursThreeRunner({ sessionId, status, ids, initialAnswers }: 
     router.push(`/participant/results/${sessionId}`);
   }
 
-  const leftOdd = oddIcons.slice(0, 3);
-  const rightOdd = oddIcons.slice(3);
+  const orderedSteps = challengeTwoOrder
+    .map((id) => challengeTwoSteps.find((step) => step.id === id))
+    .filter(Boolean) as Array<(typeof challengeTwoSteps)[number]>;
 
-  function addLink(from: string, to: string) {
-    setLinks((prev) => {
-      const exists = prev.some((link) => link.from === from && link.to === to);
-      if (exists) return prev;
-      const next = [...prev, { from, to }];
+  function handleSourcePick(itemId: string, category: "primary" | "secondary") {
+    setSourceAnswers((prev) => {
+      const next = { ...prev, [itemId]: category };
       setAnswers((current) => ({ ...current, [ids.challenge1]: next }));
       return next;
     });
   }
 
-  function handleLeftPick(code: string) {
-    if (selectedLeft === code) {
-      setSelectedLeft(null);
-      return;
-    }
-    setSelectedLeft(code);
-    if (selectedRight) {
-      addLink(code, selectedRight);
-      setSelectedLeft(null);
-      setSelectedRight(null);
-    }
-  }
-
-  function handleRightPick(code: string) {
-    if (selectedRight === code) {
-      setSelectedRight(null);
-      return;
-    }
-    setSelectedRight(code);
-    if (selectedLeft) {
-      addLink(selectedLeft, code);
-      setSelectedLeft(null);
-      setSelectedRight(null);
-    }
-  }
-
-  function removeLink(index: number) {
-    setLinks((prev) => {
-      const next = prev.filter((_, i) => i !== index);
-      setAnswers((current) => ({ ...current, [ids.challenge1]: next }));
+  function moveStep(index: number, direction: -1 | 1) {
+    setChallengeTwoOrder((prev) => {
+      const next = [...prev];
+      const targetIndex = index + direction;
+      if (targetIndex < 0 || targetIndex >= next.length) return prev;
+      const [moved] = next.splice(index, 1);
+      next.splice(targetIndex, 0, moved);
+      setAnswers((current) => ({ ...current, [ids.challenge2]: next }));
       return next;
     });
   }
@@ -490,7 +647,7 @@ export function ConcoursThreeRunner({ sessionId, status, ids, initialAnswers }: 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Concours 3: ODD"
+        title="Concours 2: Microplastiques et impact sur la sante"
         description="Repondez a toutes les questions et soumettez vos reponses pour evaluation manuelle."
       />
 
@@ -498,14 +655,14 @@ export function ConcoursThreeRunner({ sessionId, status, ids, initialAnswers }: 
         <h2 className="font-display text-2xl text-slate-900">Animation d&apos;ouverture</h2>
         <div className="concours-stage relative overflow-hidden rounded-2xl border border-[var(--line)] bg-white p-5">
           <div className="concours-step step-1">
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Situation</p>
-            <h3 className="text-xl font-semibold text-slate-900">Le lycee fait face a 4 problemes</h3>
+            <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Observation</p>
+            <h3 className="text-xl font-semibold text-slate-900">Zoom sur des objets du quotidien</h3>
             <div className="step-layout">
               <ul className="problem-grid">
-                <li className="problem-card">Bouteilles jetables</li>
-                <li className="problem-card">Gaspillage d&apos;energie</li>
-                <li className="problem-card">Fuites d&apos;eau</li>
-                <li className="problem-card">Faible engagement des eleves</li>
+                <li className="problem-card">Bouteille plastique</li>
+                <li className="problem-card">Megot</li>
+                <li className="problem-card">Textile synthetique</li>
+                <li className="problem-card">Pneu</li>
               </ul>
               <div className="illustration-panel" aria-hidden="true">
                 <svg viewBox="0 0 220 180" role="presentation" className="illustration-svg">
@@ -521,20 +678,20 @@ export function ConcoursThreeRunner({ sessionId, status, ids, initialAnswers }: 
                   <circle cx="172" cy="96" r="6" fill="#4d7c0f" />
                   <circle cx="186" cy="96" r="6" fill="#4d7c0f" />
                 </svg>
-                <p className="illustration-caption">Diagnostic rapide des problemes.</p>
+                <p className="illustration-caption">Sources visibles a l&apos;oeil nu.</p>
               </div>
             </div>
           </div>
 
           <div className="concours-step step-2">
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Tableau d&apos;actions</p>
-            <h3 className="text-xl font-semibold text-slate-900">4 actions concretes</h3>
+            <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Fragmentation</p>
+            <h3 className="text-xl font-semibold text-slate-900">Des particules de plus en plus fines</h3>
             <div className="step-layout">
               <div className="action-grid">
-                <div className="action-card">Installation de fontaines + gourdes</div>
-                <div className="action-card">Reparation des fuites</div>
-                <div className="action-card">Tri + compost</div>
-                <div className="action-card">Extinction intelligente / LED</div>
+                <div className="action-card">Usure mecanique</div>
+                <div className="action-card">UV + soleil</div>
+                <div className="action-card">Frottements</div>
+                <div className="action-card">Petites particules</div>
               </div>
               <div className="illustration-panel" aria-hidden="true">
                 <svg viewBox="0 0 220 180" role="presentation" className="illustration-svg">
@@ -545,20 +702,20 @@ export function ConcoursThreeRunner({ sessionId, status, ids, initialAnswers }: 
                   <rect x="110" y="78" width="80" height="28" rx="10" fill="#bbf7d0" />
                   <rect x="110" y="114" width="80" height="40" rx="10" fill="#fde68a" />
                 </svg>
-                <p className="illustration-caption">Plan d&apos;actions coordonnees.</p>
+                <p className="illustration-caption">Fragmentation en microplastiques.</p>
               </div>
             </div>
           </div>
 
           <div className="concours-step step-3">
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Effets</p>
-            <h3 className="text-xl font-semibold text-slate-900">Les impacts positifs</h3>
+            <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Dispersion</p>
+            <h3 className="text-xl font-semibold text-slate-900">Les particules se retrouvent partout</h3>
             <div className="step-layout">
               <div className="effects-grid">
-                <div className="effect-pill">Moins de dechets</div>
-                <div className="effect-pill">Moins d&apos;eau gaspillee</div>
-                <div className="effect-pill">Moins de depenses</div>
-                <div className="effect-pill">Plus de participation</div>
+                <div className="effect-pill">Eau</div>
+                <div className="effect-pill">Air</div>
+                <div className="effect-pill">Sols</div>
+                <div className="effect-pill">Aliments</div>
               </div>
               <div className="illustration-panel" aria-hidden="true">
                 <svg viewBox="0 0 220 180" role="presentation" className="illustration-svg">
@@ -569,19 +726,23 @@ export function ConcoursThreeRunner({ sessionId, status, ids, initialAnswers }: 
                   <rect x="100" y="98" width="70" height="18" rx="8" fill="#bbf7d0" />
                   <rect x="100" y="126" width="80" height="18" rx="8" fill="#bbf7d0" />
                 </svg>
-                <p className="illustration-caption">Resultats visibles sur le campus.</p>
+                <p className="illustration-caption">Presence diffuse dans l&apos;environnement.</p>
               </div>
             </div>
           </div>
 
           <div className="concours-step step-4">
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Final</p>
-            <h3 className="text-xl font-semibold text-slate-900">La roue ODD apparait</h3>
-            <div className="odd-wheel" aria-hidden="true" />
-            <p className="mt-3 text-sm text-slate-600">Les actions convergent vers les ODD.</p>
+            <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Exposition</p>
+            <h3 className="text-xl font-semibold text-slate-900">Boire, manger, respirer</h3>
+            <div className="exposure-grid" aria-hidden="true">
+              <div className="exposure-card">Boire</div>
+              <div className="exposure-card">Manger</div>
+              <div className="exposure-card">Respirer</div>
+            </div>
+            <p className="mt-3 text-sm text-slate-600">Le meilleur dechet plastique est celui qu&apos;on evite.</p>
           </div>
         </div>
-        <p className="text-sm text-slate-700">Question flash: L&apos;idee principale de l&apos;animation est:</p>
+        <p className="text-sm text-slate-700">Question flash: Les microplastiques peuvent venir :</p>
         <div className="grid gap-2">
           {flashOptions.map((option) => (
             <button
@@ -601,7 +762,7 @@ export function ConcoursThreeRunner({ sessionId, status, ids, initialAnswers }: 
       </Card>
 
       <Card className="space-y-4">
-        <h2 className="font-display text-2xl text-slate-900">QCM d&apos;analyse</h2>
+        <h2 className="font-display text-2xl text-slate-900">QCM microplastiques</h2>
         {readyQuestions.map((question) => (
           <div key={question.id} className="rounded-2xl border border-[var(--line)] bg-white/80 p-4">
             <p className="mb-2 text-sm font-semibold text-slate-900">{question.prompt}</p>
@@ -627,103 +788,61 @@ export function ConcoursThreeRunner({ sessionId, status, ids, initialAnswers }: 
 
       <Card className="space-y-4">
         <h2 className="font-display text-2xl text-slate-900">Defi visuel 1</h2>
-        <p className="text-sm text-slate-700">
-          Reliez au moins 4 liens logiques entre ODD 3, 4, 6, 12, 13, 17 et justifiez.
-        </p>
-        <div className="odd-linker">
-          <div className="odd-column">
-            <p className="column-title">Partie gauche</p>
-            {leftOdd.map((item) => (
-              <button
-                key={item.code}
-                type="button"
-                onClick={() => handleLeftPick(item.code)}
-                className={`odd-card ${selectedLeft === item.code ? "odd-card-active" : ""}`}
-              >
-                <span className="odd-badge">{item.icon}</span>
-                <span className="odd-code">{item.code}</span>
-                <span className="odd-title">{item.title}</span>
-              </button>
-            ))}
-          </div>
-          <div className="odd-column">
-            <p className="column-title">Partie droite</p>
-            {rightOdd.map((item) => (
-              <button
-                key={item.code}
-                type="button"
-                onClick={() => handleRightPick(item.code)}
-                className={`odd-card ${selectedRight === item.code ? "odd-card-active" : ""}`}
-              >
-                <span className="odd-badge">{item.icon}</span>
-                <span className="odd-code">{item.code}</span>
-                <span className="odd-title">{item.title}</span>
-              </button>
-            ))}
-          </div>
-          <div className="odd-links">
-            <p className="column-title">Liens valides</p>
-            {links.length === 0 ? (
-              <p className="empty-links">Cliquez un ODD a gauche puis un ODD a droite.</p>
-            ) : (
-              <ul className="links-list">
-                {links.map((link, index) => (
-                  <li key={`${link.from}-${link.to}-${index}`}>
-                    <span>{link.from}</span>
-                    <span className="link-arrow">→</span>
-                    <span>{link.to}</span>
-                    <button type="button" className="link-remove" onClick={() => removeLink(index)}>
-                      Retirer
-                    </button>
-                  </li>
+        <p className="text-sm text-slate-700">Classez chaque source en primaire ou secondaire.</p>
+        <div className="grid gap-3">
+          {challengeOneItems.map((item) => (
+            <div key={item.id} className="challenge-row">
+              <div className="challenge-label">{item.label}</div>
+              <div className="challenge-actions">
+                {challengeOneCategories.map((category) => (
+                  <button
+                    key={category.key}
+                    type="button"
+                    onClick={() => handleSourcePick(item.id, category.key)}
+                    className={`challenge-pill ${
+                      sourceAnswers[item.id] === category.key
+                        ? "challenge-pill-active"
+                        : "challenge-pill-idle"
+                    }`}
+                  >
+                    {category.label}
+                  </button>
                 ))}
-              </ul>
-            )}
-          </div>
-        </div>
-      </Card>
-
-      <Card className="space-y-4">
-        <h2 className="font-display text-2xl text-slate-900">Defi visuel 2</h2>
-        <Image
-          src="/concours3/visual-diagnostic.svg"
-          alt="Diagnostic visual"
-          width={1400}
-          height={700}
-          className="h-auto w-full rounded-2xl border border-[var(--line)]"
-        />
-        <p className="text-sm text-slate-700">Quel plan d&apos;action repond au plus grand nombre d&apos;ODD?</p>
-        <div className="grid gap-2">
-          {challengeTwoOptions.map((option) => (
-            <button
-              key={option.key}
-              type="button"
-              onClick={() => setAnswers((prev) => ({ ...prev, [ids.challenge2]: option.key }))}
-              className={`rounded-xl border px-3 py-2 text-left text-sm ${
-                answers[ids.challenge2] === option.key
-                  ? "border-[var(--brand)] bg-[var(--panel-soft)]"
-                  : "border-[var(--line)] bg-white"
-              }`}
-            >
-              {option.key}. {option.text}
-            </button>
+              </div>
+            </div>
           ))}
         </div>
       </Card>
 
       <Card className="space-y-4">
-        <h2 className="font-display text-2xl text-slate-900">Q41. Question ouverte</h2>
-        <p className="text-sm text-slate-700">
-          Votre lycee constate 4 problemes (bouteilles plastiques jetables, gaspillage d'electricite, faible tri, faible
-          participation). Proposez un mini-plan d'action avec 2 objectifs, 3 actions, les acteurs impliques, 2 indicateurs
-          de suivi et un lien avec au moins 3 ODD.
-        </p>
-        <textarea
-          className="min-h-48 w-full rounded-xl border border-[var(--line)] bg-white px-3 py-2 text-sm"
-          placeholder="Ecrivez votre mini-plan d'action..."
-          value={typeof answers[ids.openQuestion] === "string" ? String(answers[ids.openQuestion]) : ""}
-          onChange={(event) => setAnswers((prev) => ({ ...prev, [ids.openQuestion]: event.target.value }))}
-        />
+        <h2 className="font-display text-2xl text-slate-900">Defi visuel 2</h2>
+        <p className="text-sm text-slate-700">Remettez la chaine d'exposition dans l'ordre logique.</p>
+        <ul className="ordering-list">
+          {orderedSteps.map((step, index) => (
+            <li key={step.id} className="ordering-item">
+              <div className="ordering-index">{index + 1}</div>
+              <div className="ordering-text">{step.label}</div>
+              <div className="ordering-controls">
+                <button
+                  type="button"
+                  onClick={() => moveStep(index, -1)}
+                  disabled={index === 0}
+                  className="ordering-button"
+                >
+                  Monter
+                </button>
+                <button
+                  type="button"
+                  onClick={() => moveStep(index, 1)}
+                  disabled={index === orderedSteps.length - 1}
+                  className="ordering-button"
+                >
+                  Descendre
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
       </Card>
 
       <Button type="button" onClick={() => void submit()} disabled={submitting}>
@@ -843,140 +962,122 @@ export function ConcoursThreeRunner({ sessionId, status, ids, initialAnswers }: 
           border: 1px solid rgba(22, 101, 52, 0.2);
         }
 
-        .odd-wheel {
-          margin: 18px auto 0;
-          width: 160px;
-          height: 160px;
-          border-radius: 999px;
-          background: conic-gradient(
-            #ef4444 0deg 36deg,
-            #f97316 36deg 72deg,
-            #eab308 72deg 108deg,
-            #22c55e 108deg 144deg,
-            #14b8a6 144deg 180deg,
-            #0ea5e9 180deg 216deg,
-            #3b82f6 216deg 252deg,
-            #6366f1 252deg 288deg,
-            #a855f7 288deg 324deg,
-            #ec4899 324deg 360deg
-          );
-          position: relative;
-          animation: wheelSpin 6s linear infinite;
-          box-shadow: 0 14px 30px rgba(15, 23, 42, 0.25);
-        }
-
-        .odd-wheel::after {
-          content: "";
-          position: absolute;
-          inset: 24px;
-          border-radius: 999px;
-          background: #ffffff;
-          box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.08);
-        }
-
-        .odd-linker {
+        .exposure-grid {
+          margin-top: 16px;
           display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 16px;
+          gap: 12px;
+          grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
         }
 
-        .odd-column,
-        .odd-links {
+        .exposure-card {
           border-radius: 16px;
-          border: 1px solid rgba(15, 23, 42, 0.08);
-          background: rgba(255, 255, 255, 0.85);
-          padding: 12px;
-          display: grid;
-          gap: 10px;
-        }
-
-        .column-title {
-          font-size: 12px;
-          text-transform: uppercase;
-          letter-spacing: 0.2em;
-          color: #64748b;
-        }
-
-        .odd-card {
-          display: grid;
-          gap: 6px;
-          text-align: left;
-          border-radius: 14px;
-          border: 1px solid rgba(226, 232, 240, 1);
-          background: #fef3e2;
-          padding: 12px;
-          transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .odd-card:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 20px rgba(15, 23, 42, 0.1);
-        }
-
-        .odd-card-active {
-          border-color: #2563eb;
-          box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
-        }
-
-        .odd-badge {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 999px;
-          border: 1px solid rgba(226, 232, 240, 1);
-          background: #ffffff;
-          padding: 2px 10px;
-          font-size: 11px;
+          border: 1px solid rgba(14, 116, 144, 0.2);
+          background: rgba(219, 234, 254, 0.6);
+          padding: 12px 14px;
+          font-size: 14px;
           font-weight: 600;
           color: #0f172a;
-          width: fit-content;
+          text-align: center;
         }
 
-        .odd-code {
+        .challenge-row {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+          gap: 12px;
+          align-items: center;
+          border-radius: 16px;
+          border: 1px solid rgba(15, 23, 42, 0.08);
+          background: rgba(255, 255, 255, 0.92);
+          padding: 12px 14px;
+        }
+
+        .challenge-label {
           font-size: 14px;
-          font-weight: 700;
+          font-weight: 600;
           color: #0f172a;
         }
 
-        .odd-title {
+        .challenge-actions {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+
+        .challenge-pill {
+          border-radius: 999px;
+          border: 1px solid rgba(148, 163, 184, 0.6);
+          padding: 6px 12px;
           font-size: 12px;
-          color: #475569;
+          font-weight: 600;
         }
 
-        .empty-links {
-          font-size: 13px;
-          color: #64748b;
+        .challenge-pill-idle {
+          background: #ffffff;
+          color: #334155;
         }
 
-        .links-list {
+        .challenge-pill-active {
+          background: rgba(59, 130, 246, 0.16);
+          border-color: #2563eb;
+          color: #1d4ed8;
+        }
+
+        .ordering-list {
           list-style: none;
           padding: 0;
           margin: 0;
           display: grid;
-          gap: 8px;
-          font-size: 13px;
+          gap: 12px;
+        }
+
+        .ordering-item {
+          display: grid;
+          grid-template-columns: auto 1fr auto;
+          align-items: center;
+          gap: 12px;
+          border-radius: 16px;
+          border: 1px solid rgba(15, 23, 42, 0.08);
+          background: rgba(255, 255, 255, 0.92);
+          padding: 12px 14px;
+        }
+
+        .ordering-index {
+          width: 28px;
+          height: 28px;
+          border-radius: 999px;
+          background: rgba(14, 116, 144, 0.12);
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 12px;
+          font-weight: 700;
           color: #0f172a;
         }
 
-        .links-list li {
-          display: grid;
-          grid-template-columns: auto auto auto 1fr;
+        .ordering-text {
+          font-size: 14px;
+          font-weight: 600;
+          color: #0f172a;
+        }
+
+        .ordering-controls {
+          display: flex;
           gap: 8px;
-          align-items: center;
         }
 
-        .link-arrow {
-          color: #2563eb;
-        }
-
-        .link-remove {
-          justify-self: end;
-          border: none;
-          background: none;
-          color: #ef4444;
+        .ordering-button {
+          border-radius: 999px;
+          border: 1px solid rgba(148, 163, 184, 0.6);
+          background: #ffffff;
+          padding: 6px 12px;
           font-size: 12px;
           font-weight: 600;
-          cursor: pointer;
+          color: #0f172a;
+        }
+
+        .ordering-button:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
         }
 
         @keyframes stepShow {
@@ -1002,15 +1103,6 @@ export function ConcoursThreeRunner({ sessionId, status, ids, initialAnswers }: 
           }
         }
 
-        @keyframes wheelSpin {
-          0% {
-            transform: rotate(0deg);
-          }
-          100% {
-            transform: rotate(360deg);
-          }
-        }
-
         @media (max-width: 768px) {
           .step-layout {
             grid-template-columns: 1fr;
@@ -1020,7 +1112,7 @@ export function ConcoursThreeRunner({ sessionId, status, ids, initialAnswers }: 
             min-height: 520px;
           }
 
-          .odd-linker {
+          .challenge-row {
             grid-template-columns: 1fr;
           }
         }

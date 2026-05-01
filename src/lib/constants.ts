@@ -1,6 +1,6 @@
 export const APP_NAME = "ChemLearn Exam Lab";
 
-export const CONCOURS3_ACCESS_CODE = "CONCOURS3-ODD-2026";
+export const CONCOURS2_ACCESS_CODE = "CONCOURS2-2026";
 
 export const sessionStatuses = {
   NOT_STARTED: "Not started",

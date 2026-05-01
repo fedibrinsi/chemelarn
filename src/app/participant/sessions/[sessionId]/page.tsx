@@ -6,7 +6,7 @@ import { ExamRunner } from "@/components/exam/exam-runner";
 import { Card } from "@/components/ui/card";
 import { ConcoursThreeRunner } from "@/components/participant/concours-three-runner";
 import { submitSessionAction } from "@/lib/actions/participant";
-import { CONCOURS3_ACCESS_CODE } from "@/lib/constants";
+import { CONCOURS2_ACCESS_CODE } from "@/lib/constants";
 import { ButtonLink } from "@/components/shared/button-link";
 
 export default async function SessionPage({ params }: { params: Promise<{ sessionId: string }> }) {
@@ -31,7 +31,7 @@ export default async function SessionPage({ params }: { params: Promise<{ sessio
     redirect(`/participant/results/${examSession.id}`);
   }
 
-  const isConcours = examSession.accessCode.code === CONCOURS3_ACCESS_CODE;
+  const isConcours = examSession.accessCode.code === CONCOURS2_ACCESS_CODE;
   const waitingForStart = !examSession.exam.availableFrom || examSession.exam.availableFrom > new Date();
 
   if (waitingForStart) {
@@ -54,7 +54,7 @@ export default async function SessionPage({ params }: { params: Promise<{ sessio
     };
     const flatQuestionIds = snapshot.sections.flatMap((section) => section.questions.map((question) => question.id));
 
-    if (flatQuestionIds.length < 44) {
+    if (flatQuestionIds.length < 63) {
       notFound();
     }
 
@@ -65,10 +65,9 @@ export default async function SessionPage({ params }: { params: Promise<{ sessio
         initialAnswers={(examSession.draftAnswers as Record<string, unknown>) ?? {}}
         ids={{
           flash: flatQuestionIds[0],
-          questions: flatQuestionIds.slice(1, 41),
-          challenge1: flatQuestionIds[41],
-          challenge2: flatQuestionIds[42],
-          openQuestion: flatQuestionIds[43],
+          questions: flatQuestionIds.slice(1, 61),
+          challenge1: flatQuestionIds[61],
+          challenge2: flatQuestionIds[62],
         }}
       />
     );

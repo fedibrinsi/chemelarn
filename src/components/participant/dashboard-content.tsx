@@ -19,7 +19,9 @@ type DashboardContentProps = {
 
 export function ParticipantDashboardContent({ name, sessions }: DashboardContentProps) {
   const { dictionary } = useParticipantLanguage();
-  const visibleSessions = sessions.filter((item) => item.exam.title === "Concours 3 - ODD");
+  const visibleSessions = sessions.filter(
+    (item) => item.exam.title === "Concours 2 - Microplastiques et impact sur la sante",
+  );
 
   return (
     <div className="space-y-6">

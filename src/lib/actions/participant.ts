@@ -7,7 +7,7 @@ import { requireRole } from "@/lib/auth/session";
 import { buildExamSnapshot, gradeSubmission, type DraftAnswers } from "@/lib/exam";
 import { minutesFromNow } from "@/lib/utils";
 import { redeemCodeSchema } from "@/lib/validations";
-import { CONCOURS3_ACCESS_CODE } from "@/lib/constants";
+import { CONCOURS2_ACCESS_CODE } from "@/lib/constants";
 
 type ActionState = { success: boolean; message: string; redirectTo?: string };
 export type SubmitSessionResult = {
@@ -24,55 +24,74 @@ type ConcoursQuestion = {
   answerKey?: string;
 };
 
-const concoursThreeQuestions: ConcoursQuestion[] = [
-  { prompt: "Question flash: L'idee principale de l'animation", points: 1, answerKey: "B" },
-  { prompt: "Q1. Les ODD doivent etre compris comme:", points: 2, answerKey: "B" },
-  { prompt: "Q2. Les ODD couvrent principalement:", points: 2, answerKey: "B" },
-  { prompt: "Q3. Quel exemple montre le mieux l'interconnexion des ODD ?", points: 2, answerKey: "A" },
-  { prompt: "Q4. Une ville durable repose surtout sur:", points: 2, answerKey: "B" },
-  { prompt: "Q5. Le comportement le plus coherent avec l'ODD 12 (consommation responsable) est:", points: 2, answerKey: "B" },
-  { prompt: "Q6. L'expression personne ne gagne seul met surtout en avant:", points: 2, answerKey: "A" },
-  { prompt: "Q7. Quel projet de lycee correspond le mieux a une approche ODD ?", points: 2, answerKey: "B" },
-  { prompt: "Q8. L'epuisement des ressources naturelles concerne:", points: 2, answerKey: "B" },
-  { prompt: "Q9. Quel binome d'ODD est le plus directement mobilise par le tri, la reduction des dechets et la baisse des emissions ?", points: 2, answerKey: "A" },
-  { prompt: "Q10. Dans une pedagogie ODD efficace, l'eleve doit etre:", points: 2, answerKey: "B" },
-  { prompt: "Q11. Former autrement aujourd'hui pour permettre aux eleves d'agir demain signifie surtout:", points: 2, answerKey: "A" },
-  { prompt: "Q12. Quelle proposition est la plus systemique ?", points: 2, answerKey: "B" },
-  { prompt: "Q13. Une approche holistique des ODD signifie:", points: 2, answerKey: "A" },
-  { prompt: "Q14. Quel projet evite le mieux le greenwashing ?", points: 2, answerKey: "B" },
-  { prompt: "Q15. Pour un projet ODD dans un lycee, le partenariat le plus coherent est:", points: 2, answerKey: "A" },
-  { prompt: "Q16. Quand un etablissement ameliore l'acces a l'eau potable, cela peut aussi ameliorer:", points: 2, answerKey: "A" },
-  { prompt: "Q17. Quel ensemble d'indicateurs permet le mieux de suivre un projet ODD au lycee ?", points: 2, answerKey: "A" },
-  { prompt: "Q18. Une action ecologique devient plus juste socialement quand:", points: 2, answerKey: "A" },
-  { prompt: "Q19. Une approche systemique des ODD consiste a:", points: 2, answerKey: "B" },
-  { prompt: "Q20. Une action locale pertinente pour les ODD est dite levier lorsqu'elle:", points: 2, answerKey: "A" },
-  { prompt: "Q21. Lequel des projets suivants illustre le mieux une tension entre plusieurs objectifs qu'il faut arbitrer ?", points: 2, answerKey: "B" },
-  { prompt: "Q22. Un bon indicateur de suivi d'un projet ODD doit etre:", points: 2, answerKey: "A" },
-  { prompt: "Q23. Pourquoi l'ODD 17 (partenariats) est-il transversal ?", points: 2, answerKey: "B" },
-  { prompt: "Q24. Un etablissement reduit de moitie l'usage des bouteilles jetables. Quel ensemble d'effets est le plus plausible ?", points: 2, answerKey: "A" },
-  { prompt: "Q25. Dans une logique ODD, une solution durable doit eviter:", points: 2, answerKey: "A" },
-  { prompt: "Q26. Le greenwashing dans un projet scolaire correspond plutot a:", points: 2, answerKey: "A" },
-  { prompt: "Q27. Le meilleur exemple d'interconnexion entre ODD est:", points: 2, answerKey: "A" },
-  { prompt: "Q28. Dans un projet ODD au lycee, l'etape de diagnostic sert surtout a:", points: 2, answerKey: "A" },
-  { prompt: "Q29. La participation des eleves est importante parce que:", points: 2, answerKey: "A" },
-  { prompt: "Q30. Une politique d'achat responsable dans un etablissement agit principalement sur:", points: 2, answerKey: "A" },
-  { prompt: "Q31. Lequel de ces couples action / risque est le plus juste ?", points: 2, answerKey: "A" },
-  { prompt: "Q32. Une demarche coherente avec les ODD cherche a:", points: 2, answerKey: "A" },
-  { prompt: "Q33. Quel exemple correspond le mieux a la justice sociale dans un projet environnemental ?", points: 2, answerKey: "B" },
-  { prompt: "Q34. Pourquoi les ODD sont-ils utiles dans un etablissement scolaire ?", points: 2, answerKey: "A" },
-  { prompt: "Q35. Une donnee brute devient vraiment utile dans un projet ODD quand:", points: 2, answerKey: "A" },
-  { prompt: "Q36. Quelle situation illustre le mieux une gouvernance participative ?", points: 2, answerKey: "A" },
-  { prompt: "Q37. Lequel de ces objectifs de projet est le mieux formule ?", points: 2, answerKey: "B" },
-  { prompt: "Q38. Dans une logique de developpement durable, une solution est robuste si:", points: 2, answerKey: "A" },
-  { prompt: "Q39. Pourquoi faut-il faire une evaluation finale apres un projet ODD ?", points: 2, answerKey: "A" },
-  { prompt: "Q40. Quel enonce resume le mieux l'esprit des ODD au lycee ?", points: 2, answerKey: "A" },
-  { prompt: "Defi visuel 1: Carte des interconnexions", points: 10 },
-  { prompt: "Defi visuel 2: Diagnostic", points: 5, answerKey: "B" },
-  { prompt: "Q41. Question ouverte: mini-plan d'action ODD", points: 4 },
+const concoursTwoQuestions: ConcoursQuestion[] = [
+  { prompt: "Question flash: Les microplastiques peuvent venir:", points: 1, answerKey: "B" },
+  { prompt: "Q1. Les microplastiques sont:", points: 2, answerKey: "A" },
+  { prompt: "Q2. Les microplastiques peuvent provenir:", points: 2, answerKey: "A" },
+  { prompt: "Q3. Un megot jete dans l'environnement:", points: 2, answerKey: "A" },
+  { prompt: "Q4. Selon l'OMS, l'exposition humaine aux microplastiques peut se faire notamment par:", points: 2, answerKey: "A" },
+  { prompt: "Q5. Les dangers potentiels associes aux microplastiques peuvent concerner:", points: 2, answerKey: "A" },
+  { prompt: "Q6. Dire \"on connait deja tous les effets sanitaires avec certitude\" est:", points: 2, answerKey: "A" },
+  { prompt: "Q7. Les plastiques se recyclent tous ensemble sans difficulte:", points: 2, answerKey: "B" },
+  { prompt: "Q8. Un megot peut polluer:", points: 2, answerKey: "A" },
+  { prompt: "Q9. Les megots representent dans le support fourni:", points: 2, answerKey: "A" },
+  { prompt: "Q10. Parmi ces sources, laquelle est reconnue comme importante pour les microplastiques ?", points: 2, answerKey: "A" },
+  { prompt: "Q11. Les textiles synthetiques peuvent contribuer aux microplastiques:", points: 2, answerKey: "A" },
+  { prompt: "Q12. La meilleure strategie generale face aux microplastiques est:", points: 2, answerKey: "A" },
+  { prompt: "Q13. Boire dans une gourde durable et eviter les plastiques jetables quand c'est possible:", points: 2, answerKey: "A" },
+  { prompt: "Q14. Un lycee qui veut limiter la dispersion de microplastiques devrait:", points: 2, answerKey: "A" },
+  { prompt: "Q15. Les microplastiques sont retrouves:", points: 2, answerKey: "A" },
+  { prompt: "Q16. La phrase la plus juste aujourd'hui est:", points: 2, answerKey: "A" },
+  { prompt: "Q17. Une politique efficace contre les microplastiques agit:", points: 2, answerKey: "A" },
+  { prompt: "Q18. Le meilleur message final pour ce concours est:", points: 2, answerKey: "A" },
+  { prompt: "Q19. Les microplastiques secondaires proviennent surtout:", points: 2, answerKey: "A" },
+  { prompt: "Q20. Les microplastiques primaires sont:", points: 2, answerKey: "A" },
+  { prompt: "Q21. Une source importante de microplastiques dans l'environnement est:", points: 2, answerKey: "A" },
+  { prompt: "Q22. Les textiles synthetiques peuvent liberer:", points: 2, answerKey: "A" },
+  { prompt: "Q23. Les microplastiques peuvent etre presents:", points: 2, answerKey: "A" },
+  { prompt: "Q24. Le risque lie aux microplastiques est etudie car ils peuvent:", points: 2, answerKey: "A" },
+  { prompt: "Q25. Selon l'OMS, parler des effets sanitaires des microplastiques demande:", points: 2, answerKey: "A" },
+  { prompt: "Q26. Une bonne strategie de prevention est:", points: 2, answerKey: "A" },
+  { prompt: "Q27. Les megots sont problematiques car ils:", points: 2, answerKey: "A" },
+  { prompt: "Q28. Dire \"un dechet plastique abandonne est sans consequence s'il est petit\" est:", points: 2, answerKey: "A" },
+  { prompt: "Q29. Les systemes de traitement de l'eau peuvent:", points: 2, answerKey: "A" },
+  { prompt: "Q30. Le lien entre microplastiques et sante humaine est etudie notamment via:", points: 2, answerKey: "A" },
+  { prompt: "Q31. Un lycee qui veut reduire son impact plastique devrait d'abord:", points: 2, answerKey: "A" },
+  { prompt: "Q32. Le recyclage du plastique est utile mais:", points: 2, answerKey: "A" },
+  { prompt: "Q33. La taille tres petite des microplastiques pose probleme car:", points: 2, answerKey: "A" },
+  { prompt: "Q34. Le message \"Invisible ne veut pas dire inoffensif\" s'applique ici car:", points: 2, answerKey: "A" },
+  { prompt: "Q35. Une bonne action de sensibilisation au lycee serait:", points: 2, answerKey: "A" },
+  { prompt: "Q36. Le cycle de vie du plastique comprend:", points: 2, answerKey: "A" },
+  { prompt: "Q37. Un exemple d'action individuelle realiste est:", points: 2, answerKey: "A" },
+  { prompt: "Q38. Le principal enjeu scientifique aujourd'hui n'est pas seulement de detecter les microplastiques, mais aussi:", points: 2, answerKey: "A" },
+  { prompt: "Q39. Une politique efficace contre les microplastiques combine:", points: 2, answerKey: "A" },
+  { prompt: "Q40. La meilleure conclusion pour ce concours est:", points: 2, answerKey: "A" },
+  { prompt: "Q41. Un lycee veut reduire l'exposition potentielle aux microplastiques. Quelle action est la plus pertinente en priorite ?", points: 2, answerKey: "B" },
+  { prompt: "Q42. Pourquoi une strategie \"nettoyer seulement en fin de chaine\" est-elle insuffisante ?", points: 2, answerKey: "A" },
+  { prompt: "Q43. Quel scenario reflete le mieux une logique de prevention ?", points: 2, answerKey: "A" },
+  { prompt: "Q44. Dans une analyse de sante publique, pourquoi faut-il distinguer danger et exposition ?", points: 2, answerKey: "A" },
+  { prompt: "Q45. Pourquoi l'usure des pneus est-elle un enjeu important dans le debat sur les microplastiques ?", points: 2, answerKey: "A" },
+  { prompt: "Q46. Un etablissement veut acheter des uniformes. Quel critere est le plus coherent avec une approche \"microplastiques + sante + durabilite\" ?", points: 2, answerKey: "B" },
+  { prompt: "Q47. Quelle affirmation montre la meilleure comprehension scientifique actuelle ?", points: 2, answerKey: "B" },
+  { prompt: "Q48. Quel exemple illustre le mieux une \"source secondaire\" de microplastiques ?", points: 2, answerKey: "A" },
+  { prompt: "Q49. Pourquoi les microplastiques posent-ils un defi methodologique pour la recherche ?", points: 2, answerKey: "A" },
+  { prompt: "Q50. Une politique centree uniquement sur le recyclage a quelle limite principale ?", points: 2, answerKey: "A" },
+  { prompt: "Q51. Quel raisonnement est le plus solide ?", points: 2, answerKey: "B" },
+  { prompt: "Q52. Dans quel cas parle-t-on le plus d'une approche \"cycle de vie\" du plastique ?", points: 2, answerKey: "A" },
+  { prompt: "Q53. Pourquoi les microfibres textiles interessent-elles particulierement les chercheurs ?", points: 2, answerKey: "A" },
+  { prompt: "Q54. Une ville remplace les bouteilles jetables dans les batiments publics par des fontaines et contenants reutilisables. Quel effet est le plus plausible ?", points: 2, answerKey: "A" },
+  { prompt: "Q55. Quelle proposition montre le meilleur esprit critique ?", points: 2, answerKey: "A" },
+  { prompt: "Q56. Pourquoi l'abandon de dechets plastiques dans l'espace public reste-t-il un probleme meme quand le dechet parait \"petit\" ?", points: 2, answerKey: "A" },
+  { prompt: "Q57. Une campagne scolaire veut etre scientifiquement honnete. Quelle formule est la meilleure ?", points: 2, answerKey: "A" },
+  { prompt: "Q58. Quel ensemble d'indicateurs serait le plus utile pour suivre un plan \"plastique et sante\" dans un lycee ?", points: 2, answerKey: "A" },
+  { prompt: "Q59. Quelle action a le plus de chances de produire un effet durable ?", points: 2, answerKey: "B" },
+  { prompt: "Q60. La conclusion la plus rigoureuse pour ce concours est:", points: 2, answerKey: "A" },
+  { prompt: "Defi visuel 1: Source primaire ou source secondaire", points: 20 },
+  { prompt: "Defi visuel 2: Chaine d'exposition", points: 20 },
 ] as const;
 
 function applyConcoursAnswerKeys(snapshot: Parameters<typeof gradeSubmission>[0]) {
-  const answerKeys = concoursThreeQuestions.map((question) => question.answerKey ?? null);
+  const answerKeys = concoursTwoQuestions.map((question) => question.answerKey ?? null);
   let index = 0;
   return {
     ...snapshot,
@@ -90,9 +109,9 @@ function applyConcoursAnswerKeys(snapshot: Parameters<typeof gradeSubmission>[0]
   };
 }
 
-async function ensureConcoursThreeAccessCode(currentUserId: string) {
+async function ensureConcoursTwoAccessCode(currentUserId: string) {
   const existingCode = await db.examAccessCode.findUnique({
-    where: { code: CONCOURS3_ACCESS_CODE },
+    where: { code: CONCOURS2_ACCESS_CODE },
     include: {
       exam: {
         include: {
@@ -136,7 +155,7 @@ async function ensureConcoursThreeAccessCode(currentUserId: string) {
       });
     }
 
-    for (const [index, question] of concoursThreeQuestions.entries()) {
+    for (const [index, question] of concoursTwoQuestions.entries()) {
       const existingQuestion = concoursSection.questions[index];
       if (existingQuestion) {
         await db.question.update({
@@ -166,7 +185,7 @@ async function ensureConcoursThreeAccessCode(currentUserId: string) {
     }
 
     return db.examAccessCode.findUnique({
-      where: { code: CONCOURS3_ACCESS_CODE },
+      where: { code: CONCOURS2_ACCESS_CODE },
       include: {
         exam: {
           include: {
@@ -187,8 +206,8 @@ async function ensureConcoursThreeAccessCode(currentUserId: string) {
 
   const exam = await db.exam.create({
     data: {
-      title: "Concours 3 - ODD",
-      description: "Parcours ODD avec analyse systemique et defis visuels.",
+      title: "Concours 2 - Microplastiques et impact sur la sante",
+      description: "Parcours microplastiques, sources, sante et prevention.",
       status: "PUBLISHED",
       durationMinutes: 120,
       availableFrom: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
@@ -203,7 +222,7 @@ async function ensureConcoursThreeAccessCode(currentUserId: string) {
             description: "Questions et defis",
             position: 0,
             questions: {
-              create: concoursThreeQuestions.map((question, index) => ({
+              create: concoursTwoQuestions.map((question, index) => ({
                 type: "SHORT_ANSWER" as const,
                 prompt: question.prompt,
                 points: question.points,
@@ -221,14 +240,14 @@ async function ensureConcoursThreeAccessCode(currentUserId: string) {
   await db.examAccessCode.create({
     data: {
       examId: exam.id,
-      code: CONCOURS3_ACCESS_CODE,
+      code: CONCOURS2_ACCESS_CODE,
       generatedById: currentUserId,
       isActive: true,
     },
   });
 
   return db.examAccessCode.findUnique({
-    where: { code: CONCOURS3_ACCESS_CODE },
+    where: { code: CONCOURS2_ACCESS_CODE },
     include: {
       exam: {
         include: {
@@ -281,8 +300,8 @@ export async function redeemExamCodeAction(_: ActionState, formData: FormData): 
     },
   });
 
-  if (normalizedCode === CONCOURS3_ACCESS_CODE) {
-    accessCode = await ensureConcoursThreeAccessCode(session.user.id);
+  if (normalizedCode === CONCOURS2_ACCESS_CODE) {
+    accessCode = await ensureConcoursTwoAccessCode(session.user.id);
   }
 
   if (!accessCode || !accessCode.isActive || accessCode.exam.status !== "PUBLISHED") {
@@ -303,7 +322,7 @@ export async function redeemExamCodeAction(_: ActionState, formData: FormData): 
   });
 
   const now = new Date();
-  const isConcours = accessCode.code === CONCOURS3_ACCESS_CODE;
+  const isConcours = accessCode.code === CONCOURS2_ACCESS_CODE;
   const shouldHoldConcours = isConcours && (!accessCode.exam.availableFrom || accessCode.exam.availableFrom > now);
 
   const currentSession =
@@ -370,7 +389,7 @@ export async function submitSessionAction(
 
   const snapshot = examSession.examSnapshot as unknown as Parameters<typeof gradeSubmission>[0];
   const gradingSnapshot =
-    examSession.accessCode.code === CONCOURS3_ACCESS_CODE
+    examSession.accessCode.code === CONCOURS2_ACCESS_CODE
       ? applyConcoursAnswerKeys(snapshot)
       : snapshot;
 

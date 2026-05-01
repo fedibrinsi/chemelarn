@@ -11,7 +11,7 @@ export default async function AdminExamsPage() {
     orderBy: { updatedAt: "desc" },
     include: { sections: true, sessions: true, accessCodes: true },
   });
-  const visibleExams = exams.filter((exam) => exam.title === "Concours 3 - ODD");
+  const visibleExams = exams;
 
   return (
     <div className="space-y-6">
